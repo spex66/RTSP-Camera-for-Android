@@ -180,14 +180,17 @@ public class Parser {
     	StringTokenizer str = new StringTokenizer(request, separator);
         String token = null;
 
+        boolean match = false;
+        
         while (str.hasMoreTokens()) {
             token = str.nextToken();
-            if (token.startsWith(prefix)) {
+            if (token.startsWith(prefix)) {            	
+            	match = true;
                 break;
             }
         }
 
-        return token;
+        return (match == true) ? token : null;
     
     }
 
