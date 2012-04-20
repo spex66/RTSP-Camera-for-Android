@@ -248,8 +248,10 @@ public class RtspServer implements Runnable {
                 rtspResponse = new Teardown(cseq);
  
             } else if (requestType == RtspConstants.PLAY) {
-                rtspResponse = new Play(cseq);	                
-                ((Play) rtspResponse).setRange(Parser.getRangePlay(requestLine));
+                rtspResponse = new Play(cseq);	       
+                
+                String range = Parser.getRangePlay(requestLine);
+                if (range != null) ((Play) rtspResponse).setRange(range);
 
             } else {
 	        	if( requestLine.isEmpty()){

@@ -31,7 +31,7 @@ public class SDP {
 		buf.append("v=0" + RtspResponse.CRLF);
 		buf.append("s="  + fileName + RtspResponse.CRLF);
 		
-		buf.append(getSDPVideo());
+		buf.append(getSDPVideo(1));
 
 		return buf.toString();
 	}
@@ -56,13 +56,18 @@ public class SDP {
 	}
 	*/
 	
-	private StringBuffer getSDPVideo(){
+	private StringBuffer getSDPVideo(int track){
 		
 		StringBuffer buf = new StringBuffer();
 		
-		buf.append("m=video " + clientVideoPort + " RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);
-		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + " " + RtspConstants.H263_1998 + RtspResponse.CRLF);
+		buf.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);
+		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H263_1998 + RtspResponse.CRLF);
 
+		// additional information for android video
+		// view, due to extended checking mechanim
+		buf.append("a=framesize:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.WIDTH + "-" + RtspConstants.HEIGHT + RtspResponse.CRLF);
+		buf.append("a=control:trackID=" + String.valueOf(track));
+		
 		return buf;
 	
 	}

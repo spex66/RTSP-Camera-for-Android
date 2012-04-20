@@ -179,19 +179,12 @@ public class Parser {
             
     	StringTokenizer str = new StringTokenizer(request, separator);
         String token = null;
-            
-        boolean match = false;
 
         while (str.hasMoreTokens()) {
             token = str.nextToken();
             if (token.startsWith(prefix)) {
-                match = true;
                 break;
             }
-        }
-
-        if (!match) {
-            throw new Exception();
         }
 
         return token;
@@ -209,6 +202,7 @@ public class Parser {
     public static int getClientPort(String request) throws Exception {
 
     	String lineInput = getLineInput(request, "\r\n", "Transport:");
+    	if (lineInput == null) throw new Exception();
             
     	String[] parts = lineInput.split(";");
         parts[2] = parts[2].substring(12);
@@ -219,7 +213,7 @@ public class Parser {
     }
  
     /**
-     * This method retrieves the transpor protocol
+     * This method retrieves the transport protocol
      * from an incoming RTSP request.
      * 
      * @param request
@@ -229,6 +223,7 @@ public class Parser {
     public static String getTransportProtocol(String request) throws Exception {
     	
         String lineInput = getLineInput(request, "\r\n", "Transport:");
+    	if (lineInput == null) throw new Exception();
         
         String[] parts = lineInput.split(";");
         parts[0] = parts[0].substring(11);
@@ -248,6 +243,16 @@ public class Parser {
     public static String getRangePlay(String request) throws Exception {
 
     	String lineInput = getLineInput(request, "\r\n", "Range:");
+    	if (lineInput == null) {
+    		
+    		/* 
+    		 * Android's video view does not provide
+    		 * range information with a PLAY request
+    		 */
+    		
+    		return null;
+    		
+    	}
         
     	String[] parts = lineInput.split("=");
         return parts[1];
@@ -266,6 +271,7 @@ public class Parser {
     public static String getSessionType(String request) throws Exception {
         
     	String lineInput = getLineInput(request, "\r\n", "Transport:");
+    	if (lineInput == null) throw new Exception();
         
     	String[] parts = lineInput.split(";");
         return parts[1].trim();
@@ -283,6 +289,7 @@ public class Parser {
     public String getUserAgent(String request) throws Exception{
         
     	String lineInput = getLineInput(request, "\r\n", "User-Agent:");
+    	if (lineInput == null) throw new Exception();
         
     	String[] parts = lineInput.split(":");
         return parts[1];

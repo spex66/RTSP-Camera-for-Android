@@ -24,6 +24,12 @@ public class RtspConstants {
 
 	public static String H263_1998 = "H263-1998/90000";
 	
+	public static String WIDTH  = "352";
+	public static String HEIGHT = "288";
+	
+    public static final String SEP  = " ";
+
+	
 	// default client ports for audio and video streaming;
 	// the port is usually provided with an RTSP request
     public static final int CLIENT_AUDIO_PORT = 2000;
