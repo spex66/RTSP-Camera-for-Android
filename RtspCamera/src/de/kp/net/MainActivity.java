@@ -318,9 +318,9 @@ public class MainActivity extends Activity implements OnClickListener, SurfaceHo
 					if (seqn > 10)
 						try {
 
-							if (rtpSender.getReceiverCount() != 0) {
-								Log.d(TAG, "RTP packet sent to RtpSender: " + rtpSender.getReceiverCount());
-							}
+//							if (rtpSender.getReceiverCount() != 0) {
+//								Log.d(TAG, "RTP packet sent to RtpSender: " + rtpSender.getReceiverCount());
+//							}
 							
 							rtpSender.send(rtp_packet);
 							len += number - num;
