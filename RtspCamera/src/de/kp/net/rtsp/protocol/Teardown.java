@@ -1,4 +1,4 @@
-package de.kp.net.protocol;
+package de.kp.net.rtsp.protocol;
 
 public class Teardown extends RtspResponse {
 

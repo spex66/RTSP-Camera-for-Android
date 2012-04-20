@@ -1,3 +1,5 @@
+package de.kp.net.rtp;
+
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
@@ -19,13 +21,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package de.kp.net;
-
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.SocketException;
 import java.io.IOException;
+
 
 /**
  * RtpSocket implements a RTP socket for receiving and sending RTP packets.

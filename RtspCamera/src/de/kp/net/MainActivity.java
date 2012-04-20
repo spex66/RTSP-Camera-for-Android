@@ -16,7 +16,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import de.kp.net.protocol.RtspConstants;
+import de.kp.net.rtp.RtpPacket;
+import de.kp.net.rtp.RtpSender;
+import de.kp.net.rtsp.RtspConstants;
+import de.kp.net.rtsp.RtspServer;
 
 public class MainActivity extends Activity implements OnClickListener, SurfaceHolder.Callback,
 		MediaRecorder.OnErrorListener {

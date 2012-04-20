@@ -21,13 +21,13 @@
  * Luca Veltri (luca.veltri@unipr.it)
  */
 
-package de.kp.net;
+package de.kp.net.rtp;
 
 /**
  * Class Random collects some static methods for generating random numbers and
  * other stuff.
  */
-public class Random {
+public class RtpRandom {
 	/** The random seed */
 	static final long seed = System.currentTimeMillis();
 	// static final long seed=0;

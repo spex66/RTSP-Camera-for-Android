@@ -1,4 +1,4 @@
-package de.kp.net;
+package de.kp.net.rtsp;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,24 +9,36 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import android.util.Log;
-import de.kp.net.protocol.Describe;
-import de.kp.net.protocol.Options;
-import de.kp.net.protocol.Parser;
-import de.kp.net.protocol.Pause;
-import de.kp.net.protocol.Play;
-import de.kp.net.protocol.RtspConstants;
-import de.kp.net.protocol.RtspError;
-import de.kp.net.protocol.RtspResponse;
-import de.kp.net.protocol.Setup;
-import de.kp.net.protocol.Teardown;
+import de.kp.net.rtp.RtpSender;
+import de.kp.net.rtp.RtpSocket;
+import de.kp.net.rtsp.protocol.Describe;
+import de.kp.net.rtsp.protocol.Options;
+import de.kp.net.rtsp.protocol.Parser;
+import de.kp.net.rtsp.protocol.Pause;
+import de.kp.net.rtsp.protocol.Play;
+import de.kp.net.rtsp.protocol.RtspError;
+import de.kp.net.rtsp.protocol.RtspResponse;
+import de.kp.net.rtsp.protocol.Setup;
+import de.kp.net.rtsp.protocol.Teardown;
+
+/**
+ * This class describes a RTSP streaming
+ * server for Android platforms. RTSP is
+ * used to control video streaming from
+ * a remote user agent.
+ * 
+ * @author Stefan Krusche (krusche@dr-kruscheundpartner.de)
+ *
+ */
 
 public class RtspServer implements Runnable {
 
-	
+	// reference to the server socket
 	private ServerSocket serverSocket;
+	
+	// indicator to determine whether the
+	// server has stopped or not
 	private boolean stopped = false;
-	private String TAG = "RtspServer";
 
 	public RtspServer(int port) throws IOException {		
 	    this.serverSocket = new ServerSocket(port);	  
@@ -43,11 +55,7 @@ public class RtspServer implements Runnable {
 	    	
 			try {
 				Socket  clientSocket = this.serverSocket.accept();
-				
-				Log.v(TAG , "accepted");
-
 		    	new ServerThread(clientSocket);
-				Log.v(TAG , "ServerThread started");
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -57,15 +65,16 @@ public class RtspServer implements Runnable {
 		
 	}
 
+	/**
+	 * This method is used to stop the RTSP server
+	 */
 	public void stop() {
 		this.stopped = true;
 	}
 	
 	private class ServerThread extends Thread {
 		
-		/*
-		 * response to RTSP client
-		 */
+		// response to RTSP client
 		private RtspResponse rtspResponse;
 		
 		private String contentBase = "";
@@ -126,9 +135,6 @@ public class RtspServer implements Runnable {
 
 	    			// send response
 	    			response = rtspResponse.toString();
-	    			
-					Log.v(TAG , "Request: " + requestType + "\nresp: \n" + response);
-
 
 	    			rtspBufferedWriter.write(response);
 		    		rtspBufferedWriter.flush();
@@ -164,7 +170,12 @@ public class RtspServer implements Runnable {
 		    		rtspBufferedWriter.flush();
 	    			
 	    			if ((requestType == RtspConstants.PLAY) && (rtspState == RtspConstants.READY)) {	    				
+	    				
+	    				// make sure that the respective client socket is 
+	    				// ready to send RTP packets
 	    				this.rtpSocket.suspend(false);
+	    				
+	    				this.rtspState = RtspConstants.PLAYING;
 	    				
 	    			} else if ((requestType == RtspConstants.PAUSE) && (rtspState == RtspConstants.PLAYING)) {
 	    				
@@ -174,7 +185,13 @@ public class RtspServer implements Runnable {
 	    			} else if (requestType == RtspConstants.TEARDOWN) {
 
 	    				// this RTP socket is removed from the RTP Sender
-//	    				RtpSender.getInstance().removeReceiver(this.rtpSocket);
+	    				RtpSender.getInstance().removeReceiver(this.rtpSocket);
+	    				
+	    				// close the clienr socket for receiving incoming RTSP request
+	    				this.clientSocket.close();
+	    				
+	    				// close the associated RTP socket for sending RTP packets
+	    				this.rtpSocket.close();
 	    				
 	    			}
 
@@ -192,6 +209,8 @@ public class RtspServer implements Runnable {
 	  	
 	    	int requestType = -1;
 
+	    	// retrieve the request in a string representation 
+	    	// for later evaluation
 	    	String requestLine = "";
             try {
             	requestLine = Parser.readRequest(rtspBufferedReader);
@@ -200,11 +219,9 @@ public class RtspServer implements Runnable {
                 e.printStackTrace();
         
             }
-
-			Log.d(TAG , "getRequest: " + requestLine);
-
+            
+            // determine request type from incoming RTSP request
             requestType = Parser.getRequestType(requestLine);
-
 
             if (contentBase.isEmpty()) {
                 contentBase = Parser.getContentBase(requestLine);
@@ -248,6 +265,12 @@ public class RtspServer implements Runnable {
 	    
 	    }
 
+	    /**
+	     * Create an RTSP response for an incoming SETUP request.
+	     * 
+	     * @param requestLine
+	     * @throws Exception
+	     */
 	    private void buildSetupResponse(String requestLine) throws Exception {
 	        
 	    	rtspResponse = new Setup(cseq);
@@ -271,25 +294,23 @@ public class RtspServer implements Runnable {
 
 	    }
 
-       private void buildDescribeResponse(String requestLine) throws Exception{
+	    /**
+	     * Create an RTSP response for an incoming DESCRIBE request.
+	     * 
+	     * @param requestLine
+	     * @throws Exception
+	     */
+	    private void buildDescribeResponse(String requestLine) throws Exception{
                 
     	   rtspResponse = new Describe(cseq);
                 
     	   String fileName = Parser.getFileName(requestLine);
-           boolean isFile  = Parser.isFile(fileName);
-
-           if (isFile) {
-               
-        	   fileName = RtspConstants.DIR_MULTIMEDIA + fileName;
-               ((Describe)rtspResponse).setFileName(fileName);
-                
-           } else {        	   
-        	   ((Describe) rtspResponse).setFileName(fileName);
+    	   ((Describe) rtspResponse).setFileName(fileName);
         	   
-            }
-                
-            ((Describe)rtspResponse).setContentBase(contentBase);
-        }
+
+    	   ((Describe)rtspResponse).setContentBase(contentBase);
+        
+       }
 
 	}
 

@@ -1,3 +1,5 @@
+package de.kp.net.rtp;
+
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
@@ -18,9 +20,6 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-package de.kp.net;
-
 
 /**
  * RtpPacket implements a RTP packet.
@@ -250,12 +249,12 @@ public class RtpPacket {
 
 	/** init the RTP packet header (only PT) */
 	public void init(int ptype) {
-		init(ptype, Random.nextLong());
+		init(ptype, RtpRandom.nextLong());
 	}
 
 	/** init the RTP packet header (PT and SSCR) */
 	public void init(int ptype, long sscr) {
-		init(ptype, Random.nextInt(), Random.nextLong(), sscr);
+		init(ptype, RtpRandom.nextInt(), RtpRandom.nextLong(), sscr);
 	}
 
 	/** init the RTP packet header (PT, SQN, TimeStamp, SSCR) */

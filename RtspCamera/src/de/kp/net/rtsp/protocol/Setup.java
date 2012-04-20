@@ -1,6 +1,8 @@
-package de.kp.net.protocol;
+package de.kp.net.rtsp.protocol;
 
 import java.util.Random;
+
+import de.kp.net.rtsp.RtspConstants;
 
 public class Setup extends RtspResponse {
 
