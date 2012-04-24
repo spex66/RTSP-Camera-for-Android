@@ -61,6 +61,7 @@ public class RtpPacket {
 
 	/** Sets the RTP payload length */
 	public void setPayloadLength(int len) {
+		
 		packet_len = getHeaderLength() + len;
 	}
 

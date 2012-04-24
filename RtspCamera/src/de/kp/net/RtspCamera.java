@@ -2,26 +2,28 @@ package de.kp.net;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 
 import android.app.Activity;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import de.kp.net.rtp.RtpPacket;
+import de.kp.net.rtp.AbstractPacketizer;
+import de.kp.net.rtp.H264Packetizer;
 import de.kp.net.rtp.RtpSender;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.RtspServer;
 
-public class MainActivity extends Activity implements OnClickListener, SurfaceHolder.Callback,
+public class RtspCamera extends Activity implements OnClickListener, SurfaceHolder.Callback,
 		MediaRecorder.OnErrorListener {
 	private SurfaceView mVideoPreview;
 	private SurfaceHolder mSurfaceHolder;
@@ -32,10 +34,10 @@ public class MainActivity extends Activity implements OnClickListener, SurfaceHo
 	private boolean mMediaRecorderRecording = false;
 	private String TAG = "RTSPStreamer";
 	private Camera mCamera;
-	private Thread t;
 	protected boolean videoQualityHigh = false;
 	private RtpSender rtpSender;
 	private RtspServer streamer = null;
+	private AbstractPacketizer videoPacketizer;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -201,11 +203,18 @@ public class MainActivity extends Activity implements OnClickListener, SurfaceHo
 		// if the frame rate is too large, it can cause camera to become
 		// unstable. We need to fix the MediaRecorder to disable the support
 		// of setting frame rate for now.
-		mMediaRecorder.setVideoFrameRate(20);
-		mMediaRecorder.setVideoSize(352, 288);
-		// mMediaRecorder.setVideoSize(176, 144);
-
-		mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H263);
+		
+		mMediaRecorder.setVideoFrameRate(RtspConstants.FPS);
+//		mMediaRecorder.setVideoEncodingBitRate(RtspConstants.BITRATE);
+		
+		mMediaRecorder.setVideoSize(Integer.valueOf(RtspConstants.WIDTH), Integer.valueOf(RtspConstants.HEIGHT));
+//		 mMediaRecorder.setVideoSize(176, 144);
+		
+		if (MediaConstants.H264_CODEC) 
+			mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+		else
+			mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H263);
+		
 		mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
 
 		try {
@@ -231,155 +240,26 @@ public class MainActivity extends Activity implements OnClickListener, SurfaceHo
 	private void startVideoRecording() {
 
 		Log.v(TAG, "startVideoRecording");
+		
+		InputStream fis = null;
+		try {
+			fis = receiver.getInputStream();
 
-		(t = new Thread() {
+		} catch (IOException e1) {
 
-			private int fps;
-			private boolean change;
+			Log.w(TAG, "No receiver input stream");
+			return;
+		}
+		boolean videoQualityHigh = true;
+		try {
+			
+			videoPacketizer = new H264Packetizer(fis);
+			videoPacketizer.startStreaming();
 
-			public void run() {
-
-				int frame_size = 1400;
-				byte[] buffer = new byte[frame_size + 14];
-				buffer[12] = 4;
-
-				RtpPacket rtp_packet = new RtpPacket(buffer, 0);
-				int seqn = 0;
-				int num, number = 0, src, dest, len = 0, head = 0, lasthead = 0, lasthead2 = 0, cnt = 0, stable = 0;
-				long now, lasttime = 0;
-				double avgrate = videoQualityHigh ? 45000 : 24000;
-				double avglen = avgrate / 20;
-
-				InputStream fis = null;
-				try {
-					fis = receiver.getInputStream();
-
-				} catch (IOException e1) {
-
-					Log.w(TAG, "No receiver input stream");
-					return;
-				}
-
-				rtp_packet.setPayloadType(RtspConstants.RTP_PAYLOADTYPE);
-
-				// while (Receiver.listener_video != null && videoValid()) {
-				while (true) {
-					num = -1;
-					try {
-						num = fis.read(buffer, 14 + number, frame_size - number);
-
-					} catch (IOException e) {
-						Log.w(TAG, e.getMessage());
-						break;
-					}
-
-					if (num < 0) {
-						try {
-							sleep(20);
-						} catch (InterruptedException e) {
-							break;
-						}
-						continue;
-					}
-					number += num;
-					head += num;
-					try {
-						now = SystemClock.elapsedRealtime();
-						if (lasthead != head + fis.available() && ++stable >= 5 && now - lasttime > 700) {
-							if (cnt != 0 && len != 0)
-								avglen = len / cnt;
-							if (lasttime != 0) {
-								fps = (int) ((double) cnt * 1000 / (now - lasttime));
-								avgrate = (double) ((head + fis.available()) - lasthead2) * 1000 / (now - lasttime);
-							}
-							lasttime = now;
-							lasthead = head + fis.available();
-							lasthead2 = head;
-							len = cnt = stable = 0;
-						}
-					} catch (IOException e1) {
-						Log.w(TAG, e1.getMessage());
-						break;
-					}
-
-					for (num = 14; num <= 14 + number - 2; num++)
-						if (buffer[num] == 0 && buffer[num + 1] == 0)
-							break;
-					if (num > 14 + number - 2) {
-						num = 0;
-						rtp_packet.setMarker(false);
-					} else {
-						num = 14 + number - num;
-						rtp_packet.setMarker(true);
-					}
-
-					rtp_packet.setSequenceNumber(seqn++);
-					rtp_packet.setPayloadLength(number - num + 2);
-					if (seqn > 10)
-						try {
-
-//							if (rtpSender.getReceiverCount() != 0) {
-//								Log.d(TAG, "RTP packet sent to RtpSender: " + rtpSender.getReceiverCount());
-//							}
-							
-							rtpSender.send(rtp_packet);
-							len += number - num;
-
-						} catch (IOException e) {
-							Log.w(TAG, "RTP packet sent failed");
-							break;
-						}
-
-					if (num > 0) {
-						num -= 2;
-						dest = 14;
-						src = 14 + number - num;
-						if (num > 0 && buffer[src] == 0) {
-							src++;
-							num--;
-						}
-						number = num;
-						while (num-- > 0)
-							buffer[dest++] = buffer[src++];
-						buffer[12] = 4;
-
-						cnt++;
-						try {
-							if (avgrate != 0)
-								Thread.sleep((int) (avglen / avgrate * 1000));
-						} catch (Exception e) {
-							break;
-						}
-						rtp_packet.setTimestamp(SystemClock.elapsedRealtime() * 90);
-
-					} else {
-						number = 0;
-						buffer[12] = 0;
-					}
-					if (change) {
-						change = false;
-						long time = SystemClock.elapsedRealtime();
-
-						try {
-							while (fis.read(buffer, 14, frame_size) > 0 && SystemClock.elapsedRealtime() - time < 3000)
-								;
-						} catch (Exception e) {
-						}
-						number = 0;
-						buffer[12] = 0;
-					}
-				}
-
-				rtpSender.stop();
-
-				try {
-					while (fis.read(buffer, 0, frame_size) > 0)
-						;
-				} catch (IOException e) {
-				}
-			}
-
-		}).start();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -390,7 +270,8 @@ public class MainActivity extends Activity implements OnClickListener, SurfaceHo
 		if (mMediaRecorderRecording || mMediaRecorder != null) {
 
 			// stop thread
-			t.interrupt();
+			videoPacketizer.stopStreaming();
+			// t.interrupt();
 
 			if (mMediaRecorderRecording && mMediaRecorder != null) {
 				try {

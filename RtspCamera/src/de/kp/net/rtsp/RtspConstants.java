@@ -21,11 +21,16 @@ public class RtspConstants {
 	// android actually supports video streaming from
 	// the camera using H.263-1998
 	public static int RTP_PAYLOADTYPE = 98; // dynamic range
-
-	public static String H263_1998 = "H263-1998/90000";
 	
-	public static String WIDTH  = "352";
-	public static String HEIGHT = "288";
+	public static String H263_1998 = "H263-1998/90000";
+	public static String H264 = "H264/90000";
+	
+//	public static String WIDTH  = "352";
+//	public static String HEIGHT = "288";
+	public static String WIDTH  = "176";
+	public static String HEIGHT = "144";
+	public static final int FPS = 20;
+	public static final int BITRATE = 50;
 	
     public static final String SEP  = " ";
 

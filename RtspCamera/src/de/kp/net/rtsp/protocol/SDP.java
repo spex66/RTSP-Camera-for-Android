@@ -2,6 +2,7 @@ package de.kp.net.rtsp.protocol;
 
 import java.net.UnknownHostException;
 
+import de.kp.net.MediaConstants;
 import de.kp.net.rtsp.RtspConstants;
 
 public class SDP {
@@ -60,13 +61,22 @@ public class SDP {
 		
 		StringBuffer buf = new StringBuffer();
 		
-		buf.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);
-		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H263_1998 + RtspResponse.CRLF);
+		buf.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);		
+		// TODO:
+//		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H263_1998 + RtspResponse.CRLF);
+		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H264 + RtspResponse.CRLF);
+
+		// TODO
+		//buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaAoD0Q,KM48gA==;" + RtspResponse.CRLF); // 640x480 20fps
+//		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoLExA,KM48gA==;" + RtspResponse.CRLF); // 176x144 15fps
+		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaCxMQ=,KM48gA==;" + RtspResponse.CRLF); // 176x144 20fps
+//		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoFB8Q=,KM48gA==;" + RtspResponse.CRLF); // 320x240 10fps
 
 		// additional information for android video
-		// view, due to extended checking mechanim
+		// view, due to extended checking mechanism
 		buf.append("a=framesize:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.WIDTH + "-" + RtspConstants.HEIGHT + RtspResponse.CRLF);
 		buf.append("a=control:trackID=" + String.valueOf(track));
+		
 		
 		return buf;
 	

@@ -9,6 +9,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import android.util.Log;
+
 import de.kp.net.rtp.RtpSender;
 import de.kp.net.rtp.RtpSocket;
 import de.kp.net.rtsp.protocol.Describe;
@@ -74,6 +76,8 @@ public class RtspServer implements Runnable {
 	
 	private class ServerThread extends Thread {
 		
+		private String TAG = "RtspServer";
+
 		// response to RTSP client
 		private RtspResponse rtspResponse;
 		
@@ -103,6 +107,7 @@ public class RtspServer implements Runnable {
 		private RtpSocket rtpSocket;
 
 		private final Socket clientSocket;
+
 	    public ServerThread(Socket socket) {
 	    	
 	    	this.clientSocket = socket;
@@ -165,12 +170,13 @@ public class RtspServer implements Runnable {
 
 	    			// send response
 	    			response = rtspResponse.toString();
-
+	    			
 	    			rtspBufferedWriter.write(response);
 		    		rtspBufferedWriter.flush();
 	    			
 	    			if ((requestType == RtspConstants.PLAY) && (rtspState == RtspConstants.READY)) {	    				
-	    				
+		    			Log.i(TAG, "request: PLAY");
+
 	    				// make sure that the respective client socket is 
 	    				// ready to send RTP packets
 	    				this.rtpSocket.suspend(false);
@@ -178,11 +184,13 @@ public class RtspServer implements Runnable {
 	    				this.rtspState = RtspConstants.PLAYING;
 	    				
 	    			} else if ((requestType == RtspConstants.PAUSE) && (rtspState == RtspConstants.PLAYING)) {
+		    			Log.i(TAG, "request: PAUSE");
 	    				
 	    				// suspend RTP socket from sending video packets
 	    				this.rtpSocket.suspend(true);
 	    				
 	    			} else if (requestType == RtspConstants.TEARDOWN) {
+		    			Log.i(TAG, "request: TEARDOWN");
 
 	    				// this RTP socket is removed from the RTP Sender
 	    				RtpSender.getInstance().removeReceiver(this.rtpSocket);
@@ -194,6 +202,8 @@ public class RtspServer implements Runnable {
 	    				this.rtpSocket.close();
 	    				
 	    			}
+	    			
+	    			Log.i(TAG, "response: " + response);
 
 	    		}
 	      
@@ -219,6 +229,8 @@ public class RtspServer implements Runnable {
                 e.printStackTrace();
         
             }
+            
+            Log.i(TAG, "requestLine: " + requestLine);
             
             // determine request type from incoming RTSP request
             requestType = Parser.getRequestType(requestLine);
