@@ -2,8 +2,8 @@ package de.kp.net.rtsp.protocol;
 
 import java.net.UnknownHostException;
 
-import de.kp.net.MediaConstants;
 import de.kp.net.rtsp.RtspConstants;
+import de.kp.net.rtsp.RtspConstants.VideoEncoder;
 
 public class SDP {
 
@@ -13,10 +13,14 @@ public class SDP {
 	private int audioClientPort = RtspConstants.CLIENT_AUDIO_PORT;
 	private int clientVideoPort = RtspConstants.CLIENT_VIDEO_PORT;
 
-	public SDP(String fileName) {
-		this.fileName = fileName;
-	}
+	private VideoEncoder encoder;
 
+	public SDP(String fileName, VideoEncoder encoder) {
+
+		this.fileName = fileName;
+		this.encoder  = encoder;
+	
+	}
 	
 	/**
 	 * This method is used to build a minimal
@@ -32,7 +36,8 @@ public class SDP {
 		buf.append("v=0" + RtspResponse.CRLF);
 		buf.append("s="  + fileName + RtspResponse.CRLF);
 		
-		buf.append(getSDPVideo(1));
+		int track = 1;
+		buf.append(getSDPVideo(track));
 
 		return buf.toString();
 	}
@@ -59,26 +64,32 @@ public class SDP {
 	
 	private StringBuffer getSDPVideo(int track){
 		
-		StringBuffer buf = new StringBuffer();
+		StringBuffer sb = new StringBuffer();
 		
-		buf.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);		
-		// TODO:
-//		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H263_1998 + RtspResponse.CRLF);
-		buf.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H264 + RtspResponse.CRLF);
+		// cross encoder properties
+		sb.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_PAYLOADTYPE + RtspResponse.CRLF);	
+		
+		// H263 encoding
+		if (encoder.equals(VideoEncoder.H263_ENCODER)) {
 
-		// TODO
-		//buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaAoD0Q,KM48gA==;" + RtspResponse.CRLF); // 640x480 20fps
-//		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoLExA,KM48gA==;" + RtspResponse.CRLF); // 176x144 15fps
-		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaCxMQ=,KM48gA==;" + RtspResponse.CRLF); // 176x144 20fps
-//		buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoFB8Q=,KM48gA==;" + RtspResponse.CRLF); // 320x240 10fps
+			sb.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H263_1998 + RtspResponse.CRLF);
 
-		// additional information for android video
-		// view, due to extended checking mechanism
-		buf.append("a=framesize:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.WIDTH + "-" + RtspConstants.HEIGHT + RtspResponse.CRLF);
-		buf.append("a=control:trackID=" + String.valueOf(track));
+		} else if (encoder.equals(VideoEncoder.H264_ENCODER)) {
+
+			sb.append("a=rtpmap:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H264 + RtspResponse.CRLF);
+			//buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaAoD0Q,KM48gA==;" + RtspResponse.CRLF); // 640x480 20fps
+//			buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoLExA,KM48gA==;" + RtspResponse.CRLF); // 176x144 15fps
+			sb.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaCxMQ=,KM48gA==;" + RtspResponse.CRLF); // 176x144 20fps
+//			buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoFB8Q=,KM48gA==;" + RtspResponse.CRLF); // 320x240 10fps
+			
+		}
+
+		// additional information for android video view, due to extended checking mechanism
+		sb.append("a=framesize:" + RtspConstants.RTP_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.WIDTH + "-" + RtspConstants.HEIGHT + RtspResponse.CRLF);
+		sb.append("a=control:trackID=" + String.valueOf(track));
 		
 		
-		return buf;
+		return sb;
 	
 	}
 	

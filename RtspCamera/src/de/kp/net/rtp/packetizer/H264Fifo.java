@@ -18,14 +18,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package de.kp.net.rtp;
+package de.kp.net.rtp.packetizer;
 
-public class SimpleFifo {
+public class H264Fifo {
 
 	private int length = 0, tail = 0, head = 0;
 	private byte[] buffer;
 	
-	public SimpleFifo(int length) {
+	public H264Fifo(int length) {
 		this.length = length;
 		buffer = new byte[length];
 	}

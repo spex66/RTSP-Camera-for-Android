@@ -1,25 +1,27 @@
-package de.kp.net.rtp;
+package de.kp.net.rtp.packetizer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.SocketException;
 
 import android.os.SystemClock;
 import android.util.Log;
+import de.kp.net.rtp.RtpPacket;
+import de.kp.net.rtp.RtpSender;
 import de.kp.net.rtsp.RtspConstants;
 
-public class H263Packetizer extends AbstractPacketizer implements Runnable{
+public class H263Packetizer extends AbstractPacketizer implements Runnable {
+
+	private String TAG = "H263Sender";
 
 	private boolean videoQualityHigh = true;
-	private int fps;
+	// private int fps;
+	
 	private boolean change;
-	private String TAG = "H263Sender";
 	
 	public H263Packetizer(InputStream fis) throws SocketException {
 		this.fis = fis;
 		this.rtpSender = RtpSender.getInstance(); 
-
 	}
 	
 	public void run() {
@@ -28,18 +30,21 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable{
 		byte[] buffer = new byte[frame_size + 14];
 		buffer[12] = 4;
 
-		RtpPacket rtp_packet = new RtpPacket(buffer, 0);
+		RtpPacket rtpPacket = new RtpPacket(buffer, 0);
 		
 		int seqn = 0;
 		int num, number = 0, src, dest, len = 0, head = 0, lasthead = 0, lasthead2 = 0, cnt = 0, stable = 0;
+		
 		long now, lasttime = 0;
+		
 		double avgrate = videoQualityHigh ? 45000 : 24000;
 		double avglen = avgrate / 20;
 
-		rtp_packet.setPayloadType(RtspConstants.RTP_PAYLOADTYPE);
+		rtpPacket.setPayloadType(RtspConstants.RTP_PAYLOADTYPE);
 
 		// while (Receiver.listener_video != null && videoValid()) {
 		while (running) {
+
 			num = -1;
 			try {
 				num = fis.read(buffer, 14 + number, frame_size - number);
@@ -59,20 +64,27 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable{
 			}
 			number += num;
 			head += num;
+
 			try {
+			
 				now = SystemClock.elapsedRealtime();
+				
 				if (lasthead != head + fis.available() && ++stable >= 5 && now - lasttime > 700) {
 					if (cnt != 0 && len != 0)
 						avglen = len / cnt;
+					
 					if (lasttime != 0) {
-						fps = (int) ((double) cnt * 1000 / (now - lasttime));
+						// fps = (int) ((double) cnt * 1000 / (now - lasttime));
 						avgrate = (double) ((head + fis.available()) - lasthead2) * 1000 / (now - lasttime);
 					}
+					
 					lasttime = now;
 					lasthead = head + fis.available();
+					
 					lasthead2 = head;
 					len = cnt = stable = 0;
 				}
+			
 			} catch (IOException e1) {
 				Log.w(TAG, e1.getMessage());
 				break;
@@ -84,22 +96,20 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable{
 			
 			if (num > 14 + number - 2) {
 				num = 0;
-				rtp_packet.setMarker(false);
+				rtpPacket.setMarker(false);
 			} else {
 				num = 14 + number - num;
-				rtp_packet.setMarker(true);
+				rtpPacket.setMarker(true);
 			}
 
-			rtp_packet.setSequenceNumber(seqn++);
-			rtp_packet.setPayloadLength(number - num + 2);
+			rtpPacket.setSequenceNumber(seqn++);
+			rtpPacket.setPayloadLength(number - num + 2);
+			
 			if (seqn > 10)
+				
 				try {
-
-//					if (rtpSender.getReceiverCount() != 0) {
-//						Log.d(TAG, "RTP packet sent to RtpSender: " + rtpSender.getReceiverCount());
-//					}
 					
-					rtpSender.send(rtp_packet);
+					rtpSender.send(rtpPacket);
 					len += number - num;
 
 				} catch (IOException e) {
@@ -108,16 +118,20 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable{
 				}
 
 			if (num > 0) {
+
 				num -= 2;
 				dest = 14;
+				
 				src = 14 + number - num;
 				if (num > 0 && buffer[src] == 0) {
 					src++;
 					num--;
 				}
+				
 				number = num;
 				while (num-- > 0)
 					buffer[dest++] = buffer[src++];
+				
 				buffer[12] = 4;
 
 				cnt++;
@@ -127,7 +141,7 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable{
 				} catch (Exception e) {
 					break;
 				}
-				rtp_packet.setTimestamp(SystemClock.elapsedRealtime() * 90);
+				rtpPacket.setTimestamp(SystemClock.elapsedRealtime() * 90);
 
 			} else {
 				number = 0;

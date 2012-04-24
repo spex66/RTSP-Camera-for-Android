@@ -2,12 +2,15 @@ package de.kp.net.rtsp.protocol;
 
 import java.net.UnknownHostException;
 
+import de.kp.net.rtsp.RtspConstants.VideoEncoder;
+
 public class Describe extends RtspResponse {
 
     protected String rtpSession  = "";
     protected String contentBase = "";
 
     private String fileName;
+    private VideoEncoder encoder;
     
     public Describe(int cseq) {
         super(cseq);
@@ -15,7 +18,7 @@ public class Describe extends RtspResponse {
 
     protected void generateBody() {
             
-    	SDP sdp = new SDP(fileName);
+    	SDP sdp = new SDP(fileName, encoder);
 
         String sdpContent = "";
         try {
@@ -42,5 +45,8 @@ public class Describe extends RtspResponse {
     public void setFileName(String fileName) {
     	this.fileName = fileName;
     }
-    
+
+    public void setVideoEncoder(VideoEncoder encoder) {
+    	this.encoder = encoder;
+    }
 }

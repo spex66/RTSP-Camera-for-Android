@@ -13,6 +13,7 @@ import android.util.Log;
 
 import de.kp.net.rtp.RtpSender;
 import de.kp.net.rtp.RtpSocket;
+import de.kp.net.rtsp.RtspConstants.VideoEncoder;
 import de.kp.net.rtsp.protocol.Describe;
 import de.kp.net.rtsp.protocol.Options;
 import de.kp.net.rtsp.protocol.Parser;
@@ -38,11 +39,14 @@ public class RtspServer implements Runnable {
 	// reference to the server socket
 	private ServerSocket serverSocket;
 	
-	// indicator to determine whether the
-	// server has stopped or not
+	// indicator to determine whether the server has stopped or not
 	private boolean stopped = false;
 
-	public RtspServer(int port) throws IOException {		
+	// reference to the video encoder (H263, H264) used over RTP 
+	private VideoEncoder encoder;
+
+	public RtspServer(int port, VideoEncoder encoder) throws IOException {		
+		this.encoder = encoder;
 	    this.serverSocket = new ServerSocket(port);	  
 	}
 
@@ -57,7 +61,7 @@ public class RtspServer implements Runnable {
 	    	
 			try {
 				Socket  clientSocket = this.serverSocket.accept();
-		    	new ServerThread(clientSocket);
+		    	new ServerThread(clientSocket, this.encoder);
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -108,9 +112,12 @@ public class RtspServer implements Runnable {
 
 		private final Socket clientSocket;
 
-	    public ServerThread(Socket socket) {
+		private VideoEncoder encoder;
+
+	    public ServerThread(Socket socket, VideoEncoder encoder) {
 	    	
 	    	this.clientSocket = socket;
+	    	this.encoder = encoder;
 	    	
 	    	// register IP address of requesting client
 	    	this.clientAddress = this.clientSocket.getInetAddress();
@@ -317,11 +324,15 @@ public class RtspServer implements Runnable {
 	    private void buildDescribeResponse(String requestLine) throws Exception{
                 
     	   rtspResponse = new Describe(cseq);
-                
+           
+    	   // set file name
     	   String fileName = Parser.getFileName(requestLine);
     	   ((Describe) rtspResponse).setFileName(fileName);
         	   
+    	   // set video encoding
+    	   ((Describe) rtspResponse).setVideoEncoder(encoder);
 
+    	   // finally set content base
     	   ((Describe)rtspResponse).setContentBase(contentBase);
         
        }

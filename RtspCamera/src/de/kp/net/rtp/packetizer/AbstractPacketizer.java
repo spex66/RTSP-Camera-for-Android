@@ -1,7 +1,9 @@
-package de.kp.net.rtp;
+package de.kp.net.rtp.packetizer;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import de.kp.net.rtp.RtpSender;
 
 abstract public class AbstractPacketizer extends Thread {
 

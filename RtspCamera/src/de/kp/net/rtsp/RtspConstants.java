@@ -25,6 +25,11 @@ public class RtspConstants {
 	public static String H263_1998 = "H263-1998/90000";
 	public static String H264 = "H264/90000";
 	
+	public static enum VideoEncoder {
+		H263_ENCODER,
+		H264_ENCODER
+	};
+	
 //	public static String WIDTH  = "352";
 //	public static String HEIGHT = "288";
 	public static String WIDTH  = "176";

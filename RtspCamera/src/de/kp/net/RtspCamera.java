@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.net.SocketException;
 
 import android.app.Activity;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.net.LocalServerSocket;
@@ -17,26 +16,39 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import de.kp.net.rtp.AbstractPacketizer;
-import de.kp.net.rtp.H264Packetizer;
+
 import de.kp.net.rtp.RtpSender;
+import de.kp.net.rtp.packetizer.AbstractPacketizer;
+import de.kp.net.rtp.packetizer.H263Packetizer;
+import de.kp.net.rtp.packetizer.H264Packetizer;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.RtspServer;
 
-public class RtspCamera extends Activity implements OnClickListener, SurfaceHolder.Callback,
-		MediaRecorder.OnErrorListener {
+public class RtspCamera extends Activity implements OnClickListener, SurfaceHolder.Callback, MediaRecorder.OnErrorListener {
+
+	private String TAG = "RTSPCamera";
+
+	// default RTSP port is 554
+	private int SERVER_PORT = 8080;
+	
 	private SurfaceView mVideoPreview;
 	private SurfaceHolder mSurfaceHolder;
-	private LocalServerSocket lss;
+	
+	// these parameters are used to separate between incoming
+	// and outgoing streams
+	private LocalServerSocket localSocketServer;
 	private LocalSocket receiver;
 	private LocalSocket sender;
+	
 	private MediaRecorder mMediaRecorder;
+	
 	private boolean mMediaRecorderRecording = false;
-	private String TAG = "RTSPStreamer";
 	private Camera mCamera;
 	protected boolean videoQualityHigh = false;
+	
 	private RtpSender rtpSender;
 	private RtspServer streamer = null;
+	
 	private AbstractPacketizer videoPacketizer;
 
 	@Override
@@ -61,16 +73,20 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 	}
 
 	public void onResume() {
+
 		Log.d(TAG, "onResume");
 
-		/*
-		 * Starts the RTSP Server
-		 */
+		// starts the RTSP Server
+
 		try {
+		
+			// initialize video encoder to be used
+			// for SDP file generation
+			RtspConstants.VideoEncoder rtspVideoEncoder = (MediaConstants.H264_CODEC == true) ? RtspConstants.VideoEncoder.H264_ENCODER : RtspConstants.VideoEncoder.H263_ENCODER;
+			
 			if (streamer == null) {
-				// default RTSP port is 554
-				streamer = new RtspServer(8080);
-				new Thread(streamer).start();
+				streamer = new RtspServer(SERVER_PORT, rtspVideoEncoder);
+				new Thread(streamer).start();			
 			}
 
 			Log.d(TAG, "RtspServer started");
@@ -86,7 +102,8 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 		 */
 		receiver = new LocalSocket();
 		try {
-			lss = new LocalServerSocket("camera2rtsp");
+			
+			localSocketServer = new LocalServerSocket("camera2rtsp");
 
 			// InputStream the RTPPackets can be built from
 			receiver.connect(new LocalSocketAddress("camera2rtsp"));
@@ -94,7 +111,7 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 			receiver.setSendBufferSize(500000);
 
 			// FileDescriptor the Camera can send to
-			sender = lss.accept();
+			sender = localSocketServer.accept();
 			sender.setReceiveBufferSize(500000);
 			sender.setSendBufferSize(500000);
 
@@ -210,11 +227,7 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 		mMediaRecorder.setVideoSize(Integer.valueOf(RtspConstants.WIDTH), Integer.valueOf(RtspConstants.HEIGHT));
 //		 mMediaRecorder.setVideoSize(176, 144);
 		
-		if (MediaConstants.H264_CODEC) 
-			mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-		else
-			mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H263);
-		
+		mMediaRecorder.setVideoEncoder(getMediaEncoder());		
 		mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
 
 		try {
@@ -244,16 +257,22 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 		InputStream fis = null;
 		try {
 			fis = receiver.getInputStream();
-
 		} catch (IOException e1) {
-
 			Log.w(TAG, "No receiver input stream");
 			return;
 		}
-		boolean videoQualityHigh = true;
+
 		try {
+		
+			// actually H263 over RTP and H264 over RTP is supported
+			if (MediaConstants.H264_CODEC == true) {
+				videoPacketizer = new H264Packetizer(fis);
 			
-			videoPacketizer = new H264Packetizer(fis);
+			} else {
+				videoPacketizer = new H263Packetizer(fis);
+				
+			}
+
 			videoPacketizer.startStreaming();
 
 		} catch (SocketException e) {
@@ -263,6 +282,7 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 
 	}
 
+	@SuppressWarnings("unused")
 	private void stopVideoRecording() {
 
 		Log.d(TAG, "stopVideoRecording");
@@ -308,6 +328,12 @@ public class RtspCamera extends Activity implements OnClickListener, SurfaceHold
 			mMediaRecorder.release();
 			mMediaRecorder = null;
 		}
+	}
+
+	private int getMediaEncoder() {	
+		if (MediaConstants.H264_CODEC == true) 
+			return MediaRecorder.VideoEncoder.H264;		
+		return MediaRecorder.VideoEncoder.H263;
 	}
 
 }
