@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Vector;
 
 import android.util.Log;
 
@@ -42,12 +43,23 @@ public class RtspServer implements Runnable {
 	// indicator to determine whether the server has stopped or not
 	private boolean stopped = false;
 
+	// inidicator to describe whether the server all of its threads
+	// are terminated
+	private boolean terminated = false;
+	
 	// reference to the video encoder (H263, H264) used over RTP 
 	private VideoEncoder encoder;
 
+	// a temporary cache to manage all threads initiated by the RTSP server
+	private Vector<Thread> serverThreads;
+	
 	public RtspServer(int port, VideoEncoder encoder) throws IOException {		
+	
+		this.serverThreads = new Vector<Thread>();
+		
 		this.encoder = encoder;
 	    this.serverSocket = new ServerSocket(port);	  
+	
 	}
 
 	public void run() {
@@ -61,7 +73,7 @@ public class RtspServer implements Runnable {
 	    	
 			try {
 				Socket  clientSocket = this.serverSocket.accept();
-		    	new ServerThread(clientSocket, this.encoder);
+		    	serverThreads.add(new ServerThread(clientSocket, this.encoder));
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -71,11 +83,33 @@ public class RtspServer implements Runnable {
 		
 	}
 
+	public boolean isTerminated() {
+		return this.terminated;
+	}
+	
 	/**
 	 * This method is used to stop the RTSP server
 	 */
+
 	public void stop() {
+		
 		this.stopped = true;
+		terminate();
+	
+	}
+	
+	/**
+	 * This method is used to tear down all threads that have
+	 * been invoked by the RTSP server during life time
+	 */
+	private void terminate() {
+		
+		for (Thread serverThread:serverThreads) {
+			if (serverThread.isAlive()) serverThread.interrupt();
+		}
+		
+		this.terminated = true;
+		
 	}
 	
 	private class ServerThread extends Thread {
@@ -170,6 +204,9 @@ public class RtspServer implements Runnable {
 	    			
 	    		}
 
+	    		// this is an endless loop, that is terminated an
+	    		// with interrupt sent to the respective thread
+
 	    		while (true) {
 
 	    			// pares incoming request to decide how to proceed
@@ -209,9 +246,16 @@ public class RtspServer implements Runnable {
 	    				this.rtpSocket.close();
 	    				
 	    			}
-	    			
-	    			Log.i(TAG, "response: " + response);
 
+	    			// the pattern below enables an interrupt
+	    			// which allows to close this thread
+	    			try {
+	    				sleep(20);
+
+	    			} catch (InterruptedException e) {
+	    				break;
+	    			}
+	    			
 	    		}
 	      
 	    	} catch(Throwable t) {
