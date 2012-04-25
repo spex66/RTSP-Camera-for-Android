@@ -95,6 +95,13 @@ public class RtspServer implements Runnable {
 		
 		this.stopped = true;
 		terminate();
+
+		try {
+			this.serverSocket.close();
+		
+		} catch (IOException e) {	
+			// nothing todo
+		}
 	
 	}
 	
