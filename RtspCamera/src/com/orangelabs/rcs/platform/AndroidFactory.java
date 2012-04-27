@@ -43,7 +43,7 @@ public class AndroidFactory {
 	public static Context getApplicationContext() {
 		return context;
 	}
-
+	
 	/**
 	 * Load factory
 	 * 

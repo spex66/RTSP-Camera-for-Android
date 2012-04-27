@@ -56,9 +56,9 @@ public class RtspCamera extends Activity {
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window win = getWindow();
-		win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);		
-        win.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-				WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+
+        win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);		
+        win.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 
 		setContentView(R.layout.main);
 
