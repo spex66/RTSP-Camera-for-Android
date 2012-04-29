@@ -1,10 +1,10 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
 import java.net.UnknownHostException;
 
 import de.kp.net.rtsp.RtspConstants.VideoEncoder;
 
-public class Describe extends RtspResponse {
+public class RtspDescribeResponse extends RtspResponse {
 
     protected String rtpSession  = "";
     protected String contentBase = "";
@@ -12,7 +12,7 @@ public class Describe extends RtspResponse {
     private String fileName;
     private VideoEncoder encoder;
     
-    public Describe(int cseq) {
+    public RtspDescribeResponse(int cseq) {
         super(cseq);
     }
 

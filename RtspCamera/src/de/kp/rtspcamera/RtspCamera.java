@@ -20,7 +20,7 @@ import de.kp.net.rtp.packetizer.AbstractPacketizer;
 import de.kp.net.rtp.packetizer.H263Packetizer;
 import de.kp.net.rtp.packetizer.H264Packetizer;
 import de.kp.net.rtsp.RtspConstants;
-import de.kp.net.rtsp.RtspServer;
+import de.kp.net.rtsp.server.RtspServer;
 
 public class RtspCamera extends Activity {
 

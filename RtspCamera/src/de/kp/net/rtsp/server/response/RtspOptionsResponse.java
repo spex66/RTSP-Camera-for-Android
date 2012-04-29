@@ -1,8 +1,8 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
-public class Options extends RtspResponse {
+public class RtspOptionsResponse extends RtspResponse {
 
-    public Options(int cseq) {
+    public RtspOptionsResponse(int cseq) {
         super(cseq);
     }
     

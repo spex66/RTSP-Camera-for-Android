@@ -1,4 +1,4 @@
-package de.kp.net.rtsp;
+package de.kp.net.rtsp.server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,16 +14,17 @@ import android.util.Log;
 
 import de.kp.net.rtp.RtpSender;
 import de.kp.net.rtp.RtpSocket;
+import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.RtspConstants.VideoEncoder;
-import de.kp.net.rtsp.protocol.Describe;
-import de.kp.net.rtsp.protocol.Options;
-import de.kp.net.rtsp.protocol.Parser;
-import de.kp.net.rtsp.protocol.Pause;
-import de.kp.net.rtsp.protocol.Play;
-import de.kp.net.rtsp.protocol.RtspError;
-import de.kp.net.rtsp.protocol.RtspResponse;
-import de.kp.net.rtsp.protocol.Setup;
-import de.kp.net.rtsp.protocol.Teardown;
+import de.kp.net.rtsp.server.response.Parser;
+import de.kp.net.rtsp.server.response.RtspDescribeResponse;
+import de.kp.net.rtsp.server.response.RtspError;
+import de.kp.net.rtsp.server.response.RtspOptionsResponse;
+import de.kp.net.rtsp.server.response.RtspPauseResponse;
+import de.kp.net.rtsp.server.response.RtspPlayResponse;
+import de.kp.net.rtsp.server.response.RtspResponse;
+import de.kp.net.rtsp.server.response.RtspResponseTeardown;
+import de.kp.net.rtsp.server.response.RtspSetupResponse;
 
 /**
  * This class describes a RTSP streaming
@@ -302,7 +303,7 @@ public class RtspServer implements Runnable {
             }
 
             if (requestType == RtspConstants.OPTIONS) {
-        		rtspResponse = new Options(cseq);
+        		rtspResponse = new RtspOptionsResponse(cseq);
 
 
             } else if (requestType == RtspConstants.DESCRIBE) {
@@ -312,16 +313,16 @@ public class RtspServer implements Runnable {
                 buildSetupResponse(requestLine);
 		                
             } else if (requestType == RtspConstants.PAUSE) {
-                rtspResponse = new Pause(cseq);
+                rtspResponse = new RtspPauseResponse(cseq);
 		
             } else if (requestType == RtspConstants.TEARDOWN) {
-                rtspResponse = new Teardown(cseq);
+                rtspResponse = new RtspResponseTeardown(cseq);
  
             } else if (requestType == RtspConstants.PLAY) {
-                rtspResponse = new Play(cseq);	       
+                rtspResponse = new RtspPlayResponse(cseq);	       
                 
                 String range = Parser.getRangePlay(requestLine);
-                if (range != null) ((Play) rtspResponse).setRange(range);
+                if (range != null) ((RtspPlayResponse) rtspResponse).setRange(range);
 
             } else {
 	        	if( requestLine.isEmpty()){
@@ -345,23 +346,23 @@ public class RtspServer implements Runnable {
 	     */
 	    private void buildSetupResponse(String requestLine) throws Exception {
 	        
-	    	rtspResponse = new Setup(cseq);
+	    	rtspResponse = new RtspSetupResponse(cseq);
 	        
 	    	// client port
 	    	clientPort = Parser.getClientPort(requestLine);	            
-	    	((Setup) rtspResponse).setClientPort(clientPort);
+	    	((RtspSetupResponse) rtspResponse).setClientPort(clientPort);
 	    	
 	    	// transport protocol
-            ((Setup) rtspResponse).setTransportProtocol(Parser.getTransportProtocol(requestLine));
+            ((RtspSetupResponse) rtspResponse).setTransportProtocol(Parser.getTransportProtocol(requestLine));
             
             // session type
-            ((Setup) rtspResponse).setSessionType(Parser.getSessionType(requestLine));
+            ((RtspSetupResponse) rtspResponse).setSessionType(Parser.getSessionType(requestLine));
 
-            ((Setup) rtspResponse).setClientIP(this.clientAddress.getHostAddress());
+            ((RtspSetupResponse) rtspResponse).setClientIP(this.clientAddress.getHostAddress());
 	            
             int[] interleaved = Parser.getInterleavedSetup(requestLine);
             if(interleaved != null){
-                ((Setup) rtspResponse).setInterleaved(interleaved);
+                ((RtspSetupResponse) rtspResponse).setInterleaved(interleaved);
             }
 
 	    }
@@ -374,17 +375,17 @@ public class RtspServer implements Runnable {
 	     */
 	    private void buildDescribeResponse(String requestLine) throws Exception{
                 
-    	   rtspResponse = new Describe(cseq);
+    	   rtspResponse = new RtspDescribeResponse(cseq);
            
     	   // set file name
     	   String fileName = Parser.getFileName(requestLine);
-    	   ((Describe) rtspResponse).setFileName(fileName);
+    	   ((RtspDescribeResponse) rtspResponse).setFileName(fileName);
         	   
     	   // set video encoding
-    	   ((Describe) rtspResponse).setVideoEncoder(encoder);
+    	   ((RtspDescribeResponse) rtspResponse).setVideoEncoder(encoder);
 
     	   // finally set content base
-    	   ((Describe)rtspResponse).setContentBase(contentBase);
+    	   ((RtspDescribeResponse)rtspResponse).setContentBase(contentBase);
         
        }
 

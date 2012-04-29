@@ -1,4 +1,4 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
 import java.io.BufferedReader;
 import java.io.IOException;

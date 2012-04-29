@@ -1,8 +1,8 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
-public class Teardown extends RtspResponse {
+public class RtspResponseTeardown extends RtspResponse {
 
-    public Teardown(int cseq) {
+    public RtspResponseTeardown(int cseq) {
         super(cseq);
     }
 

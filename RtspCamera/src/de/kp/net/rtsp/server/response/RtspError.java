@@ -1,4 +1,4 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
 public class RtspError extends RtspResponse {
 

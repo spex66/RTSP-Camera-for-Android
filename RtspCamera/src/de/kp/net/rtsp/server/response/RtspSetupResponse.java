@@ -1,10 +1,10 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
 import java.util.Random;
 
 import de.kp.net.rtsp.RtspConstants;
 
-public class Setup extends RtspResponse {
+public class RtspSetupResponse extends RtspResponse {
 
     private int clientRTP, clientRTCP;
         
@@ -15,7 +15,7 @@ public class Setup extends RtspResponse {
         
     private String sessionType = "";
 
-    public Setup(int cseq) {
+    public RtspSetupResponse(int cseq) {
         super(cseq);
     }
 

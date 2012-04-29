@@ -1,10 +1,10 @@
-package de.kp.net.rtsp.protocol;
+package de.kp.net.rtsp.server.response;
 
-public class Play extends RtspResponse {
+public class RtspPlayResponse extends RtspResponse {
 
     protected String range = "";
    
-    public Play(int cseq) {
+    public RtspPlayResponse(int cseq) {
         super(cseq);
     }
 

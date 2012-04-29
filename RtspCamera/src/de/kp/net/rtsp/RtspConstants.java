@@ -6,6 +6,7 @@ public class RtspConstants {
 	public static int INIT 		= 0;
 	public static int READY 	= 1;
 	public static int PLAYING 	= 2;
+	public static int UNDEFINED = 3;
 	
 	// rtsp message types
 	public static int OPTIONS 	= 3;
