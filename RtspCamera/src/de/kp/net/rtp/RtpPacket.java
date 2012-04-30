@@ -238,7 +238,7 @@ public class RtpPacket {
 			payload[i] = packet[header_len + i];
 		return payload;
 	}
-
+	
 	/** Creates a new RTP packet */
 	public RtpPacket(byte[] buffer, int packet_length) {
 		packet = buffer;

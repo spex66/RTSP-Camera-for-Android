@@ -45,7 +45,7 @@ public class RtspCamera extends Activity {
 
 	private RtpSender rtpSender;
 	private RtspServer streamer = null;
-
+	
 	private AbstractPacketizer videoPacketizer;
 
 	@Override
@@ -72,7 +72,7 @@ public class RtspCamera extends Activity {
 		mSurfaceHolder = mVideoPreview.getHolder();
 		mSurfaceHolder.addCallback(surfaceCallback);
 		mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
+		
 	}
 
 	public void onResume() {

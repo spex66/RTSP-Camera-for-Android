@@ -114,6 +114,21 @@ public class RtpSocket {
 	
 	}
 
+	/** Sends a RTP packet from this socket */
+	public void send(byte[] data) throws IOException {
+
+		if (this.suspended == true) return;
+		
+		datagram.setData(data);
+		datagram.setLength(data.length);
+		
+		datagram.setAddress(remoteAddress);
+		datagram.setPort(remotePort);
+		
+		socket.send(datagram);
+	
+	}
+	
 	public void suspend(boolean suspended) {
 		this.suspended = suspended;
 	}

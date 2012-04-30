@@ -67,6 +67,21 @@ public class RtpSender {
 	}
 
 	/**
+	 * Send RTP packet to all registered RTP
+	 * packet consumers.
+	 * 
+	 * @param rtpPacket
+	 * @throws IOException
+	 */
+	public synchronized void send(byte[] data) throws IOException {
+
+		for (RtpSocket receiver:receivers) {
+			receiver.send(data);
+		}
+		
+	}
+
+	/**
 	 * De-register all registered RTP consumers
 	 */
 	public void clear() {

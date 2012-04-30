@@ -130,8 +130,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public LiveVideoPlayer() {
         // Set the local RTP port
-        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
+        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        // reservePort(localRtpPort);
     }
 
     /**
@@ -141,11 +141,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public LiveVideoPlayer(VideoCodec codec) {
         // Set the local RTP port
-        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
 
         // Set the media codec
-        setMediaCodec(codec.getMediaCodec());
+        // setMediaCodec(codec.getMediaCodec());
     }
 
     /**
@@ -154,9 +154,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * @param codec Video codec name
      */
     public LiveVideoPlayer(String codec) {
-        // Set the local RTP port
-        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
+ 
+    	// Set the local RTP port
+        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        // reservePort(localRtpPort);
 
         // Set the media codec
         for (int i = 0; i < supportedMediaCodecs.length ; i++) {
@@ -282,11 +283,15 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Init the RTP layer
         try {
-            releasePort();
-            rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
+            // releasePort();
+            
+        	rtpSender = new MediaRtpSender(videoFormat);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
+            
+            rtpSender.prepareBroadcastSession(rtpInput);
+            //rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
+        
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;

@@ -59,6 +59,10 @@ public class MediaRtpSender {
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
+    public MediaRtpSender(Format format) {
+    	this.format = format;
+    }
+
     /**
      * Constructor
      *
@@ -67,6 +71,41 @@ public class MediaRtpSender {
     public MediaRtpSender(Format format, int localRtpPort) {
     	this.format = format;
         this.localRtpPort = localRtpPort;
+    }
+
+    public void prepareBroadcastSession(MediaInput player) throws RtpException {
+    	
+    	try {
+    		// Create the input stream
+            inputStream = new MediaCaptureStream(format, player);
+    		inputStream.open();
+			if (logger.isActivated()) {
+				logger.debug("Input stream: " + inputStream.getClass().getName());
+			}
+
+            // Create the output stream
+            outputStream = new RtpOutputStream();
+            // outputStream.open();
+			
+            if (logger.isActivated()) {
+				logger.debug("Output stream: " + outputStream.getClass().getName());
+			}
+
+        	// Create the codec chain
+        	Codec[] codecChain = MediaRegistry.generateEncodingCodecChain(format.getCodec());
+
+            // Create the media processor
+    		processor = new Processor(inputStream, outputStream, codecChain);
+
+        	if (logger.isActivated()) {
+        		logger.debug("Session has been prepared with success");
+            }
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Can't prepare resources correctly", e);
+        	}
+        	throw new RtpException("Can't prepare resources");
+        }
     }
 
     /**

@@ -97,9 +97,7 @@ public class RtspClient implements TransportListener {
 		try {
 			
 			RtspOptionsRequest message = (RtspOptionsRequest) messageFactory.outgoingRequest(uri, RtspRequest.Method.OPTIONS, nextCSeq());
-			if (getTransport().isConnected() == false)
-				message.addHeader(new RtspHeader("Connection", "close"));
-			
+			// if (getTransport().isConnected() == false) message.addHeader(new RtspHeader("Connection", "close"));			
 			send(message, endpoint);
 		
 		} catch(Exception e) {

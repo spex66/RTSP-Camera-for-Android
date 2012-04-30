@@ -20,7 +20,7 @@ package com.orangelabs.rcs.platform;
 
 import android.content.Context;
 
-import com.orangelabs.rcs.platform.file.FileFactory;
+// import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 
@@ -50,11 +50,15 @@ public class AndroidFactory {
 	 * @param context Context
 	 */
 	public static void setApplicationContext(Context context) {
+		
 		AndroidFactory.context = context;
 		try {
+
 			NetworkFactory.loadFactory("com.orangelabs.rcs.platform.network.AndroidNetworkFactory");
 			RegistryFactory.loadFactory("com.orangelabs.rcs.platform.registry.AndroidRegistryFactory");
-			FileFactory.loadFactory("com.orangelabs.rcs.platform.file.AndroidFileFactory");
+			
+			// FileFactory.loadFactory("com.orangelabs.rcs.platform.file.AndroidFileFactory");
+		
 		} catch(FactoryException e) {
 			e.printStackTrace();
 		}

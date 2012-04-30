@@ -26,6 +26,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import de.kp.net.rtp.RtpSender;
+
 import java.io.IOException;
 
 /**
@@ -84,6 +86,9 @@ public class RtpOutputStream implements ProcessorOutputStream {
      */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
+    public RtpOutputStream() {	
+    }
+
     /**
      * Constructor
      *
@@ -111,7 +116,7 @@ public class RtpOutputStream implements ProcessorOutputStream {
 
         rtcpSession = new RtcpSession(true, 16000);
     }
-
+    
     /**
      * Constructor
      *
@@ -132,7 +137,8 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * @throws Exception
      */
     public void open() throws Exception {
-        if (localRtpPort != -1) {
+
+    	if (localRtpPort != -1) {
             // Create the RTP receiver
             rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
             // Create the RTCP receiver
@@ -200,6 +206,12 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * @throws IOException
      */
     public void write(Buffer buffer) throws IOException {
-		rtpTransmitter.sendRtpPacket(buffer);
+    	
+    	byte[] data = (byte[])buffer.getData();
+    	if (data == null) return;
+    	
+    	RtpSender.getInstance().send(data);
+		//rtpTransmitter.sendRtpPacket(buffer);
+    
     }
 }

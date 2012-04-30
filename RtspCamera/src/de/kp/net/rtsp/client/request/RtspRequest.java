@@ -87,7 +87,11 @@ public class RtspRequest extends RtspMessage implements Request {
 			return message.getHeader("Connection").getRawValue().equalsIgnoreCase("close");
 		
 		} catch(Exception e) {
-			client.getRequestListener().onError(client, e);
+			
+			// this is an expected exception in case of no
+			// connection close in the response message
+			
+			// client.getRequestListener().onError(client, e);
 		}
 
 		return false;
