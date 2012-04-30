@@ -278,30 +278,37 @@ public class RtspCamera extends Activity {
 
 	}
 
-	private void stopVideoRecording() {
+	 private void stopVideoRecording() {
 
-		Log.d(TAG, "stopVideoRecording");
+		  Log.d(TAG, "stopVideoRecording");
 
-		if (mediaRecorderRecording || mediaRecorder != null) {
+		  if (mediaRecorderRecording || mediaRecorder != null) {
 
-			// stop thread
-			videoPacketizer.stopStreaming();
+		   try {
 
-			if (mediaRecorderRecording && mediaRecorder != null) {
-				try {
-					mediaRecorder.setOnErrorListener(null);
-					mediaRecorder.setOnInfoListener(null);
-					mediaRecorder.stop();
-				} catch (RuntimeException e) {
-					Log.e(TAG, "stop fail: " + e.getMessage());
-				}
+		    // stop thread
+		    videoPacketizer.stopStreaming();
 
-				mediaRecorderRecording = false;
-			}
-			releaseMediaRecorder();
-		}
-	}
+		    if (mediaRecorderRecording && mediaRecorder != null) {
+		     try {
+		      mediaRecorder.setOnErrorListener(null);
+		      mediaRecorder.setOnInfoListener(null);
+		      mediaRecorder.stop();
+		     } catch (RuntimeException e) {
+		      Log.e(TAG, "stop fail: " + e.getMessage());
+		     }
 
+		     mediaRecorderRecording = false;
+		    }
+		   } catch (Exception e) {
+		    Log.e(TAG, "stopVideoRecording failed");
+		    
+		    e.printStackTrace();
+		   } finally {
+		    releaseMediaRecorder();
+		   }
+		  }
+		 }
 	private void releaseMediaRecorder() {
 
 		Log.d(TAG, "Releasing media recorder.");
