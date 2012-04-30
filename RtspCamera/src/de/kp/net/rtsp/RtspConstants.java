@@ -16,6 +16,9 @@ public class RtspConstants {
 	public static int PAUSE 	= 7;
 	public static int TEARDOWN 	= 8;
 	
+	public static String SDP_AUDIO_TYPE = "audio";
+	public static String SDP_VIDEO_TYPE = "video";
+	
 	// the payload type is part of the SDP description
 	// sent back as an answer to a DESCRIBE request.
 	

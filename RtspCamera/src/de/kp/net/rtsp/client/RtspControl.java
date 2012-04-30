@@ -91,6 +91,14 @@ public class RtspControl implements RequestListener {
 		
 	}
 
+	public boolean isConnected() {
+		return this.connected;
+	}
+	
+	public int getState() {
+		return this.state;
+	}
+	
 	public RtspDescriptor getDescriptor() {
 		return new RtspDescriptor(this.descriptor);
 	}
