@@ -87,6 +87,11 @@ public class RtpOutputStream implements ProcessorOutputStream {
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     public RtpOutputStream() {	
+    	// only use is for SSCR random number, used down in RtsPacketTransmitter.buildRtpPacket()
+        rtcpSession = new RtcpSession(true, 16000);
+        
+        // Create the RTP transmitter
+        rtpTransmitter = new RtpPacketTransmitter(rtcpSession);
     }
 
     /**
@@ -208,10 +213,11 @@ public class RtpOutputStream implements ProcessorOutputStream {
     public void write(Buffer buffer) throws IOException {
     	
     	byte[] data = (byte[])buffer.getData();
+    	
     	if (data == null) return;
     	
-    	RtpSender.getInstance().send(data);
-		//rtpTransmitter.sendRtpPacket(buffer);
+//    	RtpSender.getInstance().send(data);
+		rtpTransmitter.sendRtpPacket(buffer);
     
     }
 }

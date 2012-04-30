@@ -22,7 +22,7 @@ import de.kp.net.rtp.packetizer.H264Packetizer;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.server.RtspServer;
 
-public class RtspCamera extends Activity {
+public class RtspApiCodecsCamera extends Activity {
 
 	private String TAG = "RTSPCamera";
 
@@ -60,7 +60,7 @@ public class RtspCamera extends Activity {
         win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);		
         win.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 
-		setContentView(R.layout.main);
+		setContentView(R.layout.cameraapicodecs);
 
 		// hold the reference
 		rtpSender = RtpSender.getInstance();

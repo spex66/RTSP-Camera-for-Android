@@ -24,9 +24,15 @@ public class RtspConstants {
 	
 	// android actually supports video streaming from
 	// the camera using H.263-1998
-	public static int RTP_PAYLOADTYPE = 98; // dynamic range
+	
+	// TODO: sync with 
+	// 		com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat.PAYLOAD = 97
+	//		com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat.PAYLOAD = 96
+	public static int RTP_H264_PAYLOADTYPE = 96; // dynamic range
+	public static int RTP_H263_PAYLOADTYPE = 97; // dynamic range
 	
 	public static String H263_1998 = "H263-1998/90000";
+	public static String H263_2000 = "H263-2000/90000";
 	public static String H264 = "H264/90000";
 	
 	public static enum VideoEncoder {

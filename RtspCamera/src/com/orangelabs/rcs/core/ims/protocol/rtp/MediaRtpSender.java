@@ -83,7 +83,7 @@ public class MediaRtpSender {
 				logger.debug("Input stream: " + inputStream.getClass().getName());
 			}
 
-            // Create the output stream
+            // Create the output stream aka the Renderer
             outputStream = new RtpOutputStream();
             // outputStream.open();
 			
@@ -98,7 +98,7 @@ public class MediaRtpSender {
     		processor = new Processor(inputStream, outputStream, codecChain);
 
         	if (logger.isActivated()) {
-        		logger.debug("Session has been prepared with success");
+        		logger.debug("Broadcast Session has been prepared with success");
             }
         } catch(Exception e) {
         	if (logger.isActivated()) {

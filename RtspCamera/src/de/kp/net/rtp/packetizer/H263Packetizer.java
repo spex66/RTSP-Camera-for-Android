@@ -40,7 +40,7 @@ public class H263Packetizer extends AbstractPacketizer implements Runnable {
 		double avgrate = videoQualityHigh ? 45000 : 24000;
 		double avglen = avgrate / 20;
 
-		rtpPacket.setPayloadType(RtspConstants.RTP_PAYLOADTYPE);
+		rtpPacket.setPayloadType(RtspConstants.RTP_H263_PAYLOADTYPE);
 
 		// while (Receiver.listener_video != null && videoValid()) {
 		while (running) {

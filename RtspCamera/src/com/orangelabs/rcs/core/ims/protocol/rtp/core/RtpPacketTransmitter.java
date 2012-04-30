@@ -18,13 +18,15 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
+import java.io.IOException;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-import java.io.IOException;
+import de.kp.net.rtp.RtpSender;
 
 /**
  * RTP packet transmitter
@@ -68,7 +70,18 @@ public class RtpPacketTransmitter {
 	 */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    /**
+
+	// TODO: use Transmitter for its buildRtpPacket functionality
+    public RtpPacketTransmitter(RtcpSession rtcpSession) {
+        this.rtcpSession = rtcpSession;
+		if (logger.isActivated()) {
+            logger.debug("RTP broadcast transmitter initiated with SSCR: " + this.rtcpSession.SSRC);
+		}
+
+    }
+
+	
+	/**
      * Constructor
      *
      * @param address Remote address
@@ -190,28 +203,40 @@ public class RtpPacketTransmitter {
 	private void transmit(Packet packet) {
 		// Prepare data to be sent
 		byte[] data = packet.data;
+		
 		if (packet.offset > 0) {
 			System.arraycopy(data, packet.offset, data = new byte[packet.length], 0, packet.length);
 		}
 
-		// Update statistics
-		stats.numBytes += packet.length;
-		stats.numPackets++;
-
-		// Send data over UDP
-		try {
-			datagramConnection.send(remoteAddress, remotePort, data);
-
-            RtpSource s = rtcpSession.getMySource();
-            s.activeSender = true;
-            rtcpSession.timeOfLastRTPSent = rtcpSession.currentTime();
-            rtcpSession.packetCount++;
-            rtcpSession.octetCount += data.length;
-		} catch (IOException e) {
+		// broadcast data
+    	try {
+			RtpSender.getInstance().send(data);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 			if (logger.isActivated()) {
-				logger.error("Can't send the RTP packet", e);
+				logger.error("Can't broadcast the RTP packet", e1);
 			}
-        }
+		}
+
+//		// Update statistics
+//		stats.numBytes += packet.length;
+//		stats.numPackets++;
+//
+//		// Send data over UDP
+//		try {
+//			datagramConnection.send(remoteAddress, remotePort, data);
+//
+//            RtpSource s = rtcpSession.getMySource();
+//            s.activeSender = true;
+//            rtcpSession.timeOfLastRTPSent = rtcpSession.currentTime();
+//            rtcpSession.packetCount++;
+//            rtcpSession.octetCount += data.length;
+//		} catch (IOException e) {
+//			if (logger.isActivated()) {
+//				logger.error("Can't send the RTP packet", e);
+//			}
+//        }
     }
 
     /**

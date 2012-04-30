@@ -43,6 +43,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 import android.hardware.Camera;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -125,6 +126,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
+	private String TAG = "LiveVideoPlayer";
+
     /**
      * Constructor
      */
@@ -142,7 +145,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     public LiveVideoPlayer(VideoCodec codec) {
         // Set the local RTP port
         // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
+        // reservePort(localRtpPort);
 
         // Set the media codec
         // setMediaCodec(codec.getMediaCodec());
@@ -177,34 +180,34 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         return localRtpPort;
     }
 
-    /**
-     * Reserve a port.
-     *
-     * @param port the port to reserve
-     */
-    private void reservePort(int port) {
-        if (temporaryConnection == null) {
-            try {
-                temporaryConnection = NetworkFactory.getFactory().createDatagramConnection();
-                temporaryConnection.open(port);
-            } catch (IOException e) {
-                temporaryConnection = null;
-            }
-        }
-    }
-
-    /**
-     * Release the reserved port.
-     */
-    private void releasePort() {
-        if (temporaryConnection != null) {
-            try {
-                temporaryConnection.close();
-            } catch (IOException e) {
-                temporaryConnection = null;
-            }
-        }
-    }
+//    /**
+//     * Reserve a port.
+//     *
+//     * @param port the port to reserve
+//     */
+//    private void reservePort(int port) {
+//        if (temporaryConnection == null) {
+//            try {
+//                temporaryConnection = NetworkFactory.getFactory().createDatagramConnection();
+//                temporaryConnection.open(port);
+//            } catch (IOException e) {
+//                temporaryConnection = null;
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Release the reserved port.
+//     */
+//    private void releasePort() {
+//        if (temporaryConnection != null) {
+//            try {
+//                temporaryConnection.close();
+//            } catch (IOException e) {
+//                temporaryConnection = null;
+//            }
+//        }
+//    }
 
     /**
      * Return the video start time
@@ -240,6 +243,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * @param remotePort Remote port
      */
     public void open(String remoteHost, int remotePort) {
+    	// TODO: empty
+    }
+    
+    public void open() {
         if (opened) {
             // Already opened
             return;
@@ -336,6 +343,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Start the player
      */
     public synchronized void start() {
+		Log.d(TAG , "start");
+
+    	
         if (!opened) {
             // Player not opened
             return;
@@ -349,13 +359,15 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Start RTP layer
         rtpSender.startSession();
 
+        started = true;
+        
         // Start capture
         captureThread.start();
 
         // Player is started
         videoStartTime = SystemClock.uptimeMillis();
-        started = true;
-        notifyPlayerEventStarted();
+//        started = true;
+//        notifyPlayerEventStarted();
     }
 
     /**
@@ -381,7 +393,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Player is stopped
         videoStartTime = 0L;
         started = false;
-        notifyPlayerEventStopped();
+//        notifyPlayerEventStopped();
     }
 
     /**
@@ -589,9 +601,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          * Processing
          */
         public void run() {
-            if (rtpInput == null) {
-                return;
-            }
+//            if (rtpInput == null) {
+//                return;
+//            }
 
             int timeToSleep = 1000 / selectedVideoCodec.getFramerate();
             int timestampInc = 90000 / selectedVideoCodec.getFramerate();
@@ -607,7 +619,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
                 // Get data to encode
                 frameData = frameBuffer.getFrame();
-
+                
                 // Encode frame
                 int encodeResult;
                 if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
@@ -620,6 +632,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
                 if (encodeResult == 0 && encodedFrame.length > 0) {
                     // Send encoded frame
+                	
+                	System.out.println("LVP: captureThread: addFrame");
+                	
                     rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
                 }
 

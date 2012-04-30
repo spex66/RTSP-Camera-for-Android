@@ -39,7 +39,7 @@ public class H264Packetizer extends AbstractPacketizer implements Runnable {
 		byte[] buffer = new byte[16384*2];
 
 		RtpPacket rtpPacket = new RtpPacket(buffer, 0);
-		rtpPacket.setPayloadType(RtspConstants.RTP_PAYLOADTYPE);
+		rtpPacket.setPayloadType(RtspConstants.RTP_H264_PAYLOADTYPE);
 
 		// skip the mpeg4 header
 
