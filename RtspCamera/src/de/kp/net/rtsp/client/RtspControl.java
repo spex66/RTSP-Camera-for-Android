@@ -7,6 +7,7 @@ import de.kp.net.rtsp.client.api.RequestListener;
 import de.kp.net.rtsp.client.api.Request;
 import de.kp.net.rtsp.client.api.Response;
 import de.kp.net.rtsp.client.message.RtspDescriptor;
+import de.kp.net.rtsp.client.message.RtspMedia;
 
 public class RtspControl implements RequestListener {
 
@@ -26,18 +27,23 @@ public class RtspControl implements RequestListener {
 	
 	// reference to the SDP file returned as a response
 	// to a DESCRIBE request
-	
-	private String descriptor;
-	
+	private RtspDescriptor rtspDescriptor;
+
 	private int state;
-	
-	public RtspControl(URI serverUri, int clientPort, String resource) {
+
+	/**
+	 * This constructor is invoked with an uri that
+	 * describes the server uri and also a certain
+	 * resource
+	 */
+
+	public RtspControl(URI serverUri) {	
+	}
+
+	public RtspControl(URI serverUri, String resource) {
 				
 		// register RTSP server uri
 		this.uri = serverUri;
-		
-		// register client port where to receive RTP packets
-		this.clientPort = clientPort;
 				
 		// register resource
 		this.resource = resource;
@@ -99,8 +105,12 @@ public class RtspControl implements RequestListener {
 		return this.state;
 	}
 	
+	public int getClientPort() {
+		return this.clientPort;
+	}
+	
 	public RtspDescriptor getDescriptor() {
-		return new RtspDescriptor(this.descriptor);
+		return this.rtspDescriptor;
 	}
 	
 	@Override
@@ -117,12 +127,9 @@ public class RtspControl implements RequestListener {
 		
 	}
 
-	@Override
+	// register SDP file
 	public void onDescriptor(RtspClient client, String descriptor) {
-
-		// register SDP file
-		this.descriptor = descriptor;
-		
+		this.rtspDescriptor = new RtspDescriptor(descriptor);		
 	}
 
 	public void onFailure(RtspClient client, Request request, Throwable cause) {
@@ -157,8 +164,22 @@ public class RtspControl implements RequestListener {
 					// set state to INIT
 					this.state = RtspConstants.INIT;
 					
-					// send SETUP request
-					this.client.setup(uri, clientPort, resource);
+					/* 
+					 * onSuccess is called AFTER onDescriptor method;
+					 * this implies, that a media resource is present
+					 * with a certain client port specified by the RTSP
+					 * server
+					 */
+					
+					RtspMedia video = this.rtspDescriptor.getFirstVideo();
+					if (video != null) {
+					
+						this.clientPort = Integer.valueOf(video.getTransportPort());
+						
+						// send SETUP request
+						this.client.setup(uri, clientPort, resource);
+						
+					}
 
 				} else if (method == Request.Method.SETUP) {
 					

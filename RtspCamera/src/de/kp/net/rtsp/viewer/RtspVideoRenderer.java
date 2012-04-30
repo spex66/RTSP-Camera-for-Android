@@ -36,7 +36,6 @@ import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import de.kp.net.rtsp.RtspConstants;
@@ -145,15 +144,6 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
     
     public RtspVideoRenderer(URI uri) throws Exception {
 
-        /* 
-         * Set the local RTP port: this is the (socket)
-         * port, the RtspVideoRenderer is listening to
-         * (UDP) RTP packets.
-         */
-        
-    	localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
-
         /*
          * The parameter mediaResource describes the name
          * of a certain video 'file'; the RtspServer actually
@@ -166,7 +156,7 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
          * The RtspControl opens a connection to an RtspServer, that
          * is determined by the URI provided.
          */
-        rtspControl = new RtspControl(uri, localRtpPort, mediaResource);    
+        rtspControl = new RtspControl(uri, mediaResource);    
         
         /*
          * wait unit the rtspControl has achieved status READY; in this 
@@ -175,6 +165,16 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
         while (rtspControl.getState() != RtspConstants.READY) {
         	; // blocking
         }
+
+        /* 
+         * Set the local RTP port: this is the (socket)
+         * port, the RtspVideoRenderer is listening to
+         * (UDP) RTP packets.
+         */
+        
+    	// localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+    	localRtpPort = rtspControl.getClientPort();
+        reservePort(localRtpPort);
 
         /*
          * The media resources associated with the SDP descriptor are

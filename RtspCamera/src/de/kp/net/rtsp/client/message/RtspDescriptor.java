@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import de.kp.net.rtsp.RtspConstants;
+
 public class RtspDescriptor {
 
 	private static String SEP = "\r\n";
@@ -42,6 +44,22 @@ public class RtspDescriptor {
 
 	public List<RtspMedia> getMediaList() {
 		return mediaList;
+	}
+	
+	public RtspMedia getFirstVideo() {
+		
+		RtspMedia video = null;
+		for (RtspMedia mediaItem:this.mediaList) {
+			
+			if (mediaItem.getMediaType().equals(RtspConstants.SDP_VIDEO_TYPE)) {
+				video = mediaItem;
+				break;
+			}
+			
+		}
+		
+		return video;
+		
 	}
 	
 }

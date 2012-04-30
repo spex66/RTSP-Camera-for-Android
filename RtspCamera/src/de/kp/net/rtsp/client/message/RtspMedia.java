@@ -47,6 +47,10 @@ public class RtspMedia {
 		return clockrate;
 	}
 	
+	public String getTransportPort() {
+		return transportPort;
+	}
+	
 	public void setAttribute(String line) throws Exception {
 		
 		if (line.startsWith(SDP_CONTROL)) {
