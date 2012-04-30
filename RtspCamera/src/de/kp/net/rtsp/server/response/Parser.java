@@ -2,6 +2,7 @@ package de.kp.net.rtsp.server.response;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.StringTokenizer;
 
 import de.kp.net.rtsp.RtspConstants;
@@ -156,10 +157,12 @@ public class Parser {
     public static String getFileName(String request) throws Exception {
                 
     	String lineInput = getLineInput(request, " ", "rtsp");
-
-    	String[] parts = lineInput.split("rtsp://" + RtspConstants.SERVER_IP + "/");        
-        String fileName = parts[1];
+    	URI uri = new URI(lineInput);
+    	
+    	//String[] parts = lineInput.split("rtsp://" + RtspConstants.SERVER_IP + "/");        
+        //String fileName = parts[1];
         
+    	String fileName = uri.getPath();
         return fileName;
            
     }

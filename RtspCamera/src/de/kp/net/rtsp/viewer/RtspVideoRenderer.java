@@ -142,21 +142,13 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
      * @throws Exception 
      */
     
-    public RtspVideoRenderer(URI uri) throws Exception {
-
-        /*
-         * The parameter mediaResource describes the name
-         * of a certain video 'file'; the RtspServer actually
-         * does not evaluate the name itself, but requires its
-         * existence
-         */
-        String mediaResource = "video_feed";
+    public RtspVideoRenderer(String uri) throws Exception {
         
         /*
          * The RtspControl opens a connection to an RtspServer, that
          * is determined by the URI provided.
          */
-        rtspControl = new RtspControl(uri, mediaResource);    
+        rtspControl = new RtspControl(uri);    
         
         /*
          * wait unit the rtspControl has achieved status READY; in this 

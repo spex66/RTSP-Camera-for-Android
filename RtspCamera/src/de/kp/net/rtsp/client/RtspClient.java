@@ -145,11 +145,16 @@ public class RtspClient implements TransportListener {
 		transport.setTransportListener(this);
 	}
 
-	public void describe(URI uri) {
+	public void describe(URI uri, String resource) {
 
 		this.uri = uri;
+		
+		String finalURI = uri.toString();		
+		if ((resource != null) && (resource.equals("*") == false))
+			finalURI += '/' + resource;
+		
 		try {
-			send(messageFactory.outgoingRequest(uri.toString(), RtspRequest.Method.DESCRIBE, nextCSeq(), new RtspHeader("Accept", "application/sdp")));
+			send(messageFactory.outgoingRequest(finalURI, RtspRequest.Method.DESCRIBE, nextCSeq(), new RtspHeader("Accept", "application/sdp")));
 		
 		} catch(Exception e) {
 			if(clientListener != null) clientListener.onError(this, e);
@@ -177,7 +182,7 @@ public class RtspClient implements TransportListener {
 			String portParam = "client_port=" + localPort + "-" + (1 + localPort);
 			String finalURI = uri.toString();
 			
-			if(resource != null && !resource.equals("*"))
+			if ((resource != null) && (resource.equals("*") == false))
 				finalURI += '/' + resource;
 			
 			send(getSetup(finalURI, localPort, new TransportHeader(LowerTransport.DEFAULT, "unicast", portParam), session));

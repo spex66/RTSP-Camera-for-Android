@@ -1,13 +1,13 @@
 package de.kp.net.rtsp.client;
 
 import java.net.URI;
-
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.client.api.RequestListener;
 import de.kp.net.rtsp.client.api.Request;
 import de.kp.net.rtsp.client.api.Response;
 import de.kp.net.rtsp.client.message.RtspDescriptor;
 import de.kp.net.rtsp.client.message.RtspMedia;
+import de.kp.net.rtsp.client.transport.TCPTransport;
 
 public class RtspControl implements RequestListener {
 
@@ -21,7 +21,7 @@ public class RtspControl implements RequestListener {
 	// reference to the RTSP server URI
 	private URI uri;
 
-	private int clientPort;
+	private int port;
 
 	private String resource;
 	
@@ -37,33 +37,73 @@ public class RtspControl implements RequestListener {
 	 * resource
 	 */
 
-	public RtspControl(URI serverUri) {	
-	}
+	public RtspControl(String uri) {	
 
-	public RtspControl(URI serverUri, String resource) {
-				
-		// register RTSP server uri
-		this.uri = serverUri;
-				
-		// register resource
-		this.resource = resource;
-		
-		// initialize the RTSP communication
-		this.client = new RtspClient();
-		this.client.setRequestListener(this);
-		
-		this.state = RtspConstants.UNDEFINED;
-		
+		int pos = uri.lastIndexOf("/");
+
 		try {
+
+			this.uri      = new URI(uri.substring(0, pos));
+			this.resource = uri.substring(pos+1);
+
+			// initialize the RTSP communication
+			this.client = new RtspClient();
+			this.client.setTransport(new TCPTransport());
+			
+			this.client.setRequestListener(this);			
+			this.state = RtspConstants.UNDEFINED;
 			
 			// the OPTIONS request is used to invoke and
 			// test the connection to the RTSP server,
 			// specified with the URI provided
 			
-			this.client.options("*", uri);
+			this.client.options("*", this.uri);
 
 		} catch (Exception e) {
-			onError(this.client, e);
+			
+			if (this.client != null) {
+				onError(this.client, e);
+				
+			} else {
+				e.printStackTrace();
+				
+			}
+			
+		}
+		
+	}
+
+	public RtspControl(String uri, String resource) {
+				
+		try {
+
+			this.uri      = new URI(uri);
+			this.resource = resource;
+
+			// initialize the RTSP communication
+			this.client = new RtspClient();
+			this.client.setTransport(new TCPTransport());
+			
+			this.client.setRequestListener(this);
+			
+			this.state = RtspConstants.UNDEFINED;
+			
+			// the OPTIONS request is used to invoke and
+			// test the connection to the RTSP server,
+			// specified with the URI provided
+			
+			this.client.options("*", this.uri);
+
+		} catch (Exception e) {
+			
+			if (this.client != null) {
+				onError(this.client, e);
+				
+			} else {
+				e.printStackTrace();
+				
+			}
+			
 		}
 
 	}
@@ -106,7 +146,7 @@ public class RtspControl implements RequestListener {
 	}
 	
 	public int getClientPort() {
-		return this.clientPort;
+		return this.port;
 	}
 	
 	public RtspDescriptor getDescriptor() {
@@ -157,7 +197,7 @@ public class RtspControl implements RequestListener {
 					this.connected = true;
 					
 					// send DESCRIBE request
-					this.client.describe(this.uri);
+					this.client.describe(this.uri, this.resource);
 				
 				} else if (method == Request.Method.DESCRIBE) {
 					
@@ -174,10 +214,10 @@ public class RtspControl implements RequestListener {
 					RtspMedia video = this.rtspDescriptor.getFirstVideo();
 					if (video != null) {
 					
-						this.clientPort = Integer.valueOf(video.getTransportPort());
+						this.port = Integer.valueOf(video.getTransportPort());
 						
 						// send SETUP request
-						this.client.setup(uri, clientPort, resource);
+						this.client.setup(this.uri, this.port, this.resource);
 						
 					}
 
