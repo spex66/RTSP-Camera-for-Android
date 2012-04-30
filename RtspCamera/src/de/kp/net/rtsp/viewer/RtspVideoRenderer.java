@@ -48,7 +48,6 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
