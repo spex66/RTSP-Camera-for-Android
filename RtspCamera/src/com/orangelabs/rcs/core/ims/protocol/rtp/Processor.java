@@ -131,9 +131,7 @@ public class Processor extends Thread {
 
                 // Drop the old packet
                 long seqNum = inBuffer.getSequenceNumber();
-                
-                System.out.println("Proc run: sq# " + seqNum);
-                
+                                
                 if (seqNum + 3 > bigSeqNum) {
                     if (seqNum > bigSeqNum) {
                         bigSeqNum = seqNum;

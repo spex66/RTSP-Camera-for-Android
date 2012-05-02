@@ -499,10 +499,7 @@ public class RtspVideoRecorder extends IMediaPlayer.Stub implements Camera.Previ
                 }
 
                 if (encodeResult == 0 && encodedFrame.length > 0) {
-                    // Send encoded frame
-                	
-                	System.out.println("LVP: captureThread: addFrame");
-                	
+                    // Send encoded frame                	
                     rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
                 }
 

@@ -7,8 +7,6 @@ package de.kp.rtspviewer;
  * @author Peter Arwanitis (arwanitis@dr-kruscheundpartner.de)
  *
  */
-import java.net.URI;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +16,7 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
 
-import de.kp.net.rtsp.viewer.RtspVideoRenderer;
+import de.kp.net.rtp.viewer.RtpVideoRenderer;
 
 
 
@@ -27,7 +25,7 @@ public class RtspViewerActivity extends Activity {
 	/**
 	 * Video renderer
 	 */
-	private RtspVideoRenderer incomingRenderer = null;
+	private RtpVideoRenderer incomingRenderer = null;
 
 	/**
 	 * Video preview
@@ -92,7 +90,7 @@ public class RtspViewerActivity extends Activity {
             incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
             incomingVideoView.setAspectRatio(videoWidth, videoHeight);
             try {
-				incomingRenderer = new RtspVideoRenderer("rtsp://192.168.178.47:8080/video");
+				incomingRenderer = new RtpVideoRenderer("rtsp://192.168.178.53:8080/video");
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
