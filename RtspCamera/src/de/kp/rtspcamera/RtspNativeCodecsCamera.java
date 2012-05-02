@@ -11,8 +11,7 @@ import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
-
+import de.kp.net.rtp.recorder.RtspVideoRecorder;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.server.RtspServer;
 
@@ -23,7 +22,7 @@ public class RtspNativeCodecsCamera extends Activity {
 	// default RTSP command port is 554
 	private int SERVER_PORT = 8080;
 
-	private LiveVideoPlayer outgoingPlayer;
+	private RtspVideoRecorder outgoingPlayer;
 
 	private SurfaceView mCameraPreview;
 	private SurfaceHolder previewHolder;
@@ -59,7 +58,7 @@ public class RtspNativeCodecsCamera extends Activity {
 		previewHolder.addCallback(surfaceCallback);
 		previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
-		outgoingPlayer = new LiveVideoPlayer("h263-2000");
+		outgoingPlayer = new RtspVideoRecorder("h263-2000");
 		outgoingPlayer.open();
 		
 

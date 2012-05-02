@@ -16,14 +16,18 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.protocol.rtp;
+package de.kp.net.rtp.recorder;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
+import com.orangelabs.rcs.core.ims.protocol.rtp.Processor;
+import com.orangelabs.rcs.core.ims.protocol.rtp.RtpException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaCaptureStream;
-import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpOutputStream;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import de.kp.net.rtp.stream.RtpOutputStream;
 
 /**
  * Media RTP sender
@@ -50,11 +54,6 @@ public class MediaRtpSender {
     private RtpOutputStream outputStream = null;
 
     /**
-     * Local RTP port
-     */
-    private int localRtpPort;
-
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -63,17 +62,7 @@ public class MediaRtpSender {
     	this.format = format;
     }
 
-    /**
-     * Constructor
-     *
-     * @param format Media format
-     */
-    public MediaRtpSender(Format format, int localRtpPort) {
-    	this.format = format;
-        this.localRtpPort = localRtpPort;
-    }
-
-    public void prepareBroadcastSession(MediaInput player) throws RtpException {
+    public void prepareSession(MediaInput player) throws RtpException {
     	
     	try {
     		// Create the input stream
@@ -101,48 +90,7 @@ public class MediaRtpSender {
         		logger.debug("Broadcast Session has been prepared with success");
             }
         } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't prepare resources correctly", e);
-        	}
-        	throw new RtpException("Can't prepare resources");
-        }
-    }
 
-    /**
-     * Prepare the RTP session
-     *
-     * @param player Media player
-     * @param remoteAddress Remote address
-     * @param remotePort Remote port
-     * @throws RtpException
-     */
-    public void prepareSession(MediaInput player, String remoteAddress, int remotePort)
-            throws RtpException {
-    	try {
-    		// Create the input stream
-            inputStream = new MediaCaptureStream(format, player);
-    		inputStream.open();
-			if (logger.isActivated()) {
-				logger.debug("Input stream: " + inputStream.getClass().getName());
-			}
-
-            // Create the output stream
-            outputStream = new RtpOutputStream(remoteAddress, remotePort, localRtpPort);
-            outputStream.open();
-			if (logger.isActivated()) {
-				logger.debug("Output stream: " + outputStream.getClass().getName());
-			}
-
-        	// Create the codec chain
-        	Codec[] codecChain = MediaRegistry.generateEncodingCodecChain(format.getCodec());
-
-            // Create the media processor
-    		processor = new Processor(inputStream, outputStream, codecChain);
-
-        	if (logger.isActivated()) {
-        		logger.debug("Session has been prepared with success");
-            }
-        } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Can't prepare resources correctly", e);
         	}

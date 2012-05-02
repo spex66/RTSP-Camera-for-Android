@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.kp.net.rtsp.viewer;
+package de.kp.net.rtp.viewer;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
@@ -48,7 +48,6 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -57,7 +56,7 @@ import java.util.Vector;
  *
  * @author jexa7410
  */
-public class RtspVideoRenderer extends IMediaRenderer.Stub {
+public class RtpVideoRenderer extends IMediaRenderer.Stub {
 
     /**
      * List of supported video codecs
@@ -141,7 +140,7 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
      * @throws Exception 
      */
     
-    public RtspVideoRenderer(String uri) throws Exception {
+    public RtpVideoRenderer(String uri) throws Exception {
         
         /*
          * The RtspControl opens a connection to an RtspServer, that
@@ -293,8 +292,13 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
 
         // Check video codec
         if (selectedVideoCodec == null) {
-            notifyPlayerEventError("Video Codec not selected");
+        	          	
+			if (logger.isActivated()) {
+			    logger.debug("Player error: Video Codec not selected");
+			}
+
             return;
+
         }
 
         try {
@@ -309,14 +313,22 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
             }
             
             if (result == 0) {
-                notifyPlayerEventError("Decoder init failed with error code " + result);
+            	           	
+                if (logger.isActivated()) {
+                    logger.debug("Player error: Decoder init failed with error code " + result);
+                }
+
                 return;
             }
         
         } catch (UnsatisfiedLinkError e) {
-            
-        	notifyPlayerEventError(e.getMessage());
+	
+            if (logger.isActivated()) {
+                logger.debug("Player error: " + e.getMessage());
+            }
+
             return;
+        
         }
 
         try {
@@ -332,13 +344,18 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
             rtpReceiver.prepareSession(rtpOutput, videoFormat);
 
         } catch (Exception e) {
-            notifyPlayerEventError(e.getMessage());
+        	
+            if (logger.isActivated()) {
+                logger.debug("Player error: " + e.getMessage());
+            }
+
             return;
+
         }
 
         // Player is opened
         opened = true;
-        notifyPlayerEventOpened();
+
     }
 
     /**
@@ -360,7 +377,7 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
 
         // Player is closed
         opened = false;
-        notifyPlayerEventClosed();
+
     }
 
     public void closeVideoDecoder() {
@@ -410,8 +427,6 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
         // Renderer is started
         videoStartTime = SystemClock.uptimeMillis();
         started = true;
-    
-        notifyPlayerEventStarted();
 
     }
 
@@ -439,8 +454,6 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
         // Renderer is stopped
         started = false;
         videoStartTime = 0L;
-
-        notifyPlayerEventStopped();
     
     }
 
@@ -487,108 +500,18 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
      * @param mediaCodec Media codec
      */
     public void setMediaCodec(MediaCodec mediaCodec) {
-        if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
+        
+    	if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
             selectedVideoCodec = new VideoCodec(mediaCodec);
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
-        } else {
-            notifyPlayerEventError("Codec not supported");
-        }
-    }
-
-    /**
-     * Notify player event started
-     */
-    private void notifyPlayerEventStarted() {
-        if (logger.isActivated()) {
-            logger.debug("Player is started");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaStarted();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
+        
+    	} else {
+    		
+            if (logger.isActivated()) {
+                logger.debug("Player error: Codec not supported");
             }
-        }
-    }
-
-    /**
-     * Notify player event stopped
-     */
-    private void notifyPlayerEventStopped() {
-        if (logger.isActivated()) {
-            logger.debug("Player is stopped");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaStopped();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event opened
-     */
-    private void notifyPlayerEventOpened() {
-        if (logger.isActivated()) {
-            logger.debug("Player is opened");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaOpened();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event closed
-     */
-    private void notifyPlayerEventClosed() {
-        if (logger.isActivated()) {
-            logger.debug("Player is closed");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaClosed();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event error
-     */
-    private void notifyPlayerEventError(String error) {
-        if (logger.isActivated()) {
-            logger.debug("Player error: " + error);
-        }
-
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaError(error);
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
+        
+    	}
     }
 
     /**
@@ -609,17 +532,16 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
          * Constructor
          */
         public MediaRtpOutput() {
-            decodedFrame = new int[selectedVideoCodec.getWidth() * selectedVideoCodec.getHeight()];
-            rgbFrame = Bitmap.createBitmap(selectedVideoCodec.getWidth(),
-                    selectedVideoCodec.getHeight(),
-                    Bitmap.Config.RGB_565);
+            
+        	decodedFrame = new int[selectedVideoCodec.getWidth() * selectedVideoCodec.getHeight()];
+            rgbFrame     = Bitmap.createBitmap(selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight(), Bitmap.Config.RGB_565);
+        
         }
 
         /**
          * Open the renderer
          */
         public void open() {
-            // Nothing to do
         }
 
         /**
@@ -657,7 +579,7 @@ public class RtspVideoRenderer extends IMediaRenderer.Stub {
 
 	@Override
 	public void open(String remoteHost, int remotePort) throws RemoteException {
-		// no longer supported
 	}
+
 }
 

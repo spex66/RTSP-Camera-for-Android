@@ -16,10 +16,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.service.api.client.media.video;
+package de.kp.net.rtp.recorder;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263Encoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263EncoderParams;
@@ -31,28 +30,23 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
-import com.orangelabs.rcs.platform.network.DatagramConnection;
-import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
+import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.FifoBuffer;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.hardware.Camera;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.Vector;
 
 /**
  * Live RTP video player. Supports only H.263 and H264 QCIF formats.
  */
-public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback {
+public class RtspVideoRecorder extends IMediaPlayer.Stub implements Camera.PreviewCallback {
 
     /**
      * List of supported video codecs
@@ -84,7 +78,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * RTP sender session
      */
-    private MediaRtpSender rtpSender = null;
+    private MediaRtpSender rtpMediaSender = null;
 
     /**
      * RTP media input
@@ -117,24 +111,16 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     private Vector<IMediaEventListener> listeners = new Vector<IMediaEventListener>();
 
     /**
-     * Temporary connection to reserve the port
-     */
-    private DatagramConnection temporaryConnection = null;
-
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
-	private String TAG = "LiveVideoPlayer";
+	private String TAG = "RtspVideoRecorder";
 
     /**
      * Constructor
      */
-    public LiveVideoPlayer() {
-        // Set the local RTP port
-        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        // reservePort(localRtpPort);
+    public RtspVideoRecorder() {
     }
 
     /**
@@ -142,13 +128,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      *
      * @param codec Video codec
      */
-    public LiveVideoPlayer(VideoCodec codec) {
-        // Set the local RTP port
-        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        // reservePort(localRtpPort);
-
+    public RtspVideoRecorder(VideoCodec codec) {
         // Set the media codec
-        // setMediaCodec(codec.getMediaCodec());
+        setMediaCodec(codec.getMediaCodec());
     }
 
     /**
@@ -156,12 +138,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      *
      * @param codec Video codec name
      */
-    public LiveVideoPlayer(String codec) {
- 
-    	// Set the local RTP port
-        // localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        // reservePort(localRtpPort);
-
+    public RtspVideoRecorder(String codec) {
         // Set the media codec
         for (int i = 0; i < supportedMediaCodecs.length ; i++) {
             if (codec.toLowerCase().contains(supportedMediaCodecs[i].getCodecName().toLowerCase())) {
@@ -179,35 +156,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     public int getLocalRtpPort() {
         return localRtpPort;
     }
-
-//    /**
-//     * Reserve a port.
-//     *
-//     * @param port the port to reserve
-//     */
-//    private void reservePort(int port) {
-//        if (temporaryConnection == null) {
-//            try {
-//                temporaryConnection = NetworkFactory.getFactory().createDatagramConnection();
-//                temporaryConnection.open(port);
-//            } catch (IOException e) {
-//                temporaryConnection = null;
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Release the reserved port.
-//     */
-//    private void releasePort() {
-//        if (temporaryConnection != null) {
-//            try {
-//                temporaryConnection.close();
-//            } catch (IOException e) {
-//                temporaryConnection = null;
-//            }
-//        }
-//    }
 
     /**
      * Return the video start time
@@ -243,70 +191,89 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * @param remotePort Remote port
      */
     public void open(String remoteHost, int remotePort) {
-    	// TODO: empty
+    	// This is an interface method, that is no longer
+    	// used with the actual context
     }
     
     public void open() {
-        if (opened) {
+
+    	if (opened) {
             // Already opened
             return;
         }
 
         // Check video codec
         if (selectedVideoCodec == null) {
-            notifyPlayerEventError("Video Codec not selected");
+        	
+            if (logger.isActivated()) {
+                logger.debug("Player error: Video Codec not selected");
+            }
+
             return;
+
         }
 
         // Init video encoder
         try {
             if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
                 // H264
-                NativeH264Encoder.InitEncoder(selectedVideoCodec.getWidth(),
-                        selectedVideoCodec.getHeight(), selectedVideoCodec.getFramerate());
-                // TODO: To be analyzed: InitEncoder exit with 0 but it works...
-                // if (result == 0) {
-                //   notifyPlayerEventError("Encoder init failed with error code " + result);
-                //   return;
-                // }
+                NativeH264Encoder.InitEncoder(selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight(), selectedVideoCodec.getFramerate());
+
             } else if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H263Config.CODEC_NAME)) {
                 // Default H263
                 NativeH263EncoderParams params = new NativeH263EncoderParams();
+            
                 params.setEncFrameRate(selectedVideoCodec.getFramerate());
                 params.setBitRate(selectedVideoCodec.getBitrate());
+                
                 params.setTickPerSrc(params.getTimeIncRes() / selectedVideoCodec.getFramerate());
                 params.setIntraPeriod(-1);
                 params.setNoFrameSkipped(false);
+                
                 int result = NativeH263Encoder.InitEncoder(params);
+                
                 if (result != 1) {
-                    notifyPlayerEventError("Encoder init failed with error code " + result);
+                	
+                    if (logger.isActivated()) {
+                        logger.debug("Player error: Encoder init failed with error code " + result);
+                    }
+
                     return;
+
                 }
             }
+        
         } catch (UnsatisfiedLinkError e) {
-            notifyPlayerEventError(e.getMessage());
+
+        	if (logger.isActivated()) {
+                logger.debug("Player error: " + e.getMessage());
+            }
+
             return;
+
         }
 
         // Init the RTP layer
         try {
-            // releasePort();
-            
-        	rtpSender = new MediaRtpSender(videoFormat);
-            rtpInput = new MediaRtpInput();
+
+        	rtpInput = new MediaRtpInput();
             rtpInput.open();
             
-            rtpSender.prepareBroadcastSession(rtpInput);
-            //rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
+        	rtpMediaSender = new MediaRtpSender(videoFormat);            
+            rtpMediaSender.prepareSession(rtpInput);
         
         } catch (Exception e) {
-            notifyPlayerEventError(e.getMessage());
+        	
+            if (logger.isActivated()) {
+                logger.debug("Player error: " + e.getMessage());
+            }
+        	
             return;
         }
 
         // Player is opened
         opened = true;
-        notifyPlayerEventOpened();
+
     }
 
     /**
@@ -319,15 +286,17 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         }
         // Close the RTP layer
         rtpInput.close();
-        rtpSender.stopSession();
+        rtpMediaSender.stopSession();
 
         try {
             // Close the video encoder
             if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
                 NativeH264Encoder.DeinitEncoder();
+
             } else if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H263Config.CODEC_NAME)) {
                 NativeH263Encoder.DeinitEncoder();
             }
+        
         } catch (UnsatisfiedLinkError e) {
             if (logger.isActivated()) {
                 logger.error("Can't close correctly the video encoder", e);
@@ -336,7 +305,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Player is closed
         opened = false;
-        notifyPlayerEventClosed();
+
     }
 
     /**
@@ -344,56 +313,44 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public synchronized void start() {
 		Log.d(TAG , "start");
-
-    	
-        if (!opened) {
-            // Player not opened
+   	
+        if ((opened == false) || (started == true)) {
             return;
         }
-
-        if (started) {
-            // Already started
-            return;
-        }
-
-        // Start RTP layer
-        rtpSender.startSession();
 
         started = true;
+
+        // Start RTP layer
+        rtpMediaSender.startSession();
         
         // Start capture
         captureThread.start();
 
         // Player is started
         videoStartTime = SystemClock.uptimeMillis();
-//        started = true;
-//        notifyPlayerEventStarted();
+
     }
 
     /**
      * Stop the player
      */
     public void stop() {
-        if (!opened) {
-            // Player not opened
-            return;
-        }
-
-        if (!started) {
-            // Already stopped
+        
+    	if ((opened == false) || (started == false)) { 
             return;
         }
 
         // Stop capture
         try {
             captureThread.interrupt();
+
         } catch (Exception e) {
         }
 
         // Player is stopped
         videoStartTime = 0L;
         started = false;
-//        notifyPlayerEventStopped();
+
     }
 
     /**
@@ -439,112 +396,23 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * @param mediaCodec Media codec
      */
     public void setMediaCodec(MediaCodec mediaCodec) {
-        if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
-            selectedVideoCodec = new VideoCodec(mediaCodec);
+       
+    	if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
+        
+    		selectedVideoCodec = new VideoCodec(mediaCodec);
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
 
             // Initialize frame buffer
             if (frameBuffer == null) {
                 frameBuffer = new CameraBuffer();
             }
+
         } else {
-            notifyPlayerEventError("Codec not supported");
-        }
-    }
 
-    /**
-     * Notify player event started
-     */
-    private void notifyPlayerEventStarted() {
-        if (logger.isActivated()) {
-            logger.debug("Player is started");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaStarted();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
+            if (logger.isActivated()) {
+                logger.debug("Player error: Codec not supported");
             }
-        }
-    }
 
-    /**
-     * Notify player event stopped
-     */
-    private void notifyPlayerEventStopped() {
-        if (logger.isActivated()) {
-            logger.debug("Player is stopped");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaStopped();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event opened
-     */
-    private void notifyPlayerEventOpened() {
-        if (logger.isActivated()) {
-            logger.debug("Player is opened");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaOpened();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event closed
-     */
-    private void notifyPlayerEventClosed() {
-        if (logger.isActivated()) {
-            logger.debug("Player is closed");
-        }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaClosed();
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify player event error
-     */
-    private void notifyPlayerEventError(String error) {
-        if (logger.isActivated()) {
-            logger.debug("Player error: " + error);
-        }
-
-        Iterator<IMediaEventListener> ite = listeners.iterator();
-        while (ite.hasNext()) {
-            try {
-                ((IMediaEventListener)ite.next()).mediaError(error);
-            } catch (RemoteException e) {
-                if (logger.isActivated()) {
-                    logger.error("Can't notify listener", e);
-                }
-            }
         }
     }
 

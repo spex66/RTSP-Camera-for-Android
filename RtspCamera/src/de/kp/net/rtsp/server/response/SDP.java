@@ -66,8 +66,7 @@ public class SDP {
 	private StringBuffer getSDPVideo(int track){
 		
 		StringBuffer sb = new StringBuffer();
-		
-		
+				
 		// H263 encoding
 		if (encoder.equals(VideoEncoder.H263_ENCODER)) {
 			// cross encoder properties
@@ -93,8 +92,6 @@ public class SDP {
 		}
 
 		sb.append("a=control:trackID=" + String.valueOf(track));
-		
-		
 		return sb;
 	
 	}
