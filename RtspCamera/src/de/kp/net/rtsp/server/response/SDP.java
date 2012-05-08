@@ -2,6 +2,8 @@ package de.kp.net.rtsp.server.response;
 
 import java.net.UnknownHostException;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
+
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.RtspConstants.VideoEncoder;
 
@@ -82,9 +84,20 @@ public class SDP {
 			sb.append("m=video " + clientVideoPort + RtspConstants.SEP + "RTP/AVP " + RtspConstants.RTP_H264_PAYLOADTYPE + RtspResponse.CRLF);	
 
 			sb.append("a=rtpmap:" + RtspConstants.RTP_H264_PAYLOADTYPE + RtspConstants.SEP + RtspConstants.H264 + RtspResponse.CRLF);
+
+			
+			/*
+			 * with change to in-band SPS/PPS parameters following SDP statements should be unnecessary 
+			 */
+			// 176x144 15fps
+			//sb.append("a=fmtp:" + RtspConstants.RTP_H264_PAYLOADTYPE + " packetization-mode=0;" + H264Config.CODEC_PARAMS +";sprop-parameter-sets=J0IAINoLExA,KM48gA==;" + RtspResponse.CRLF); 
+			// 352 288 15fps
+//			sb.append("a=fmtp:" + RtspConstants.RTP_H264_PAYLOADTYPE + " packetization-mode=0;" + H264Config.CODEC_PARAMS +";sprop-parameter-sets=J0IAINoFglE=,KM48gA==;" + RtspResponse.CRLF); 
+
+			
 			//buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaAoD0Q,KM48gA==;" + RtspResponse.CRLF); // 640x480 20fps
 //			buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoLExA,KM48gA==;" + RtspResponse.CRLF); // 176x144 15fps
-			sb.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAIKaCxMQ=,KM48gA==;" + RtspResponse.CRLF); // 176x144 20fps
+//			sb.append("a=fmtp:" + RtspConstants.RTP_H264_PAYLOADTYPE + " packetization-mode=1;" + H264Config.CODEC_PARAMS +";sprop-parameter-sets=J0IAIKaCxMQ=,KM48gA==;" + RtspResponse.CRLF); // 176x144 20fps
 //			buf.append("a=fmtp:98 packetization-mode=1;profile-level-id=420020;sprop-parameter-sets=J0IAINoFB8Q=,KM48gA==;" + RtspResponse.CRLF); // 320x240 10fps
 			
 			// additional information for android video view, due to extended checking mechanism

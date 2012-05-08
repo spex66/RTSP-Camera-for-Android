@@ -131,8 +131,16 @@ public class Processor extends Thread {
 
                 // Drop the old packet
                 long seqNum = inBuffer.getSequenceNumber();
-                                
+                
                 if (seqNum + 3 > bigSeqNum) {
+                	
+                    /*
+                     * don't send a packet twice
+                     * with in band SPS/PPS parameters this will break processing otherwise 
+                     */
+                	if (seqNum==bigSeqNum)
+                		continue; 
+                		
                     if (seqNum > bigSeqNum) {
                         bigSeqNum = seqNum;
                     }

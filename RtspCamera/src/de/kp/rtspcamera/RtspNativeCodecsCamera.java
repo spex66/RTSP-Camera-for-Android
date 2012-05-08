@@ -20,7 +20,7 @@ public class RtspNativeCodecsCamera extends Activity {
 	private String TAG = "RTSPNativeCamera";
 
 	// default RTSP command port is 554
-	private int SERVER_PORT = 8080;
+//	private int SERVER_PORT = 8080;
 
 	private RtspVideoRecorder outgoingPlayer;
 
@@ -58,7 +58,8 @@ public class RtspNativeCodecsCamera extends Activity {
 		previewHolder.addCallback(surfaceCallback);
 		previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
-		outgoingPlayer = new RtspVideoRecorder("h263-2000");
+//		outgoingPlayer = new RtspVideoRecorder("h263-2000");
+		outgoingPlayer = new RtspVideoRecorder("h264");
 		outgoingPlayer.open();
 		
 
@@ -79,7 +80,7 @@ public class RtspNativeCodecsCamera extends Activity {
 					: RtspConstants.VideoEncoder.H263_ENCODER;
 
 			if (streamer == null) {
-				streamer = new RtspServer(SERVER_PORT, rtspVideoEncoder);
+				streamer = new RtspServer(RtspConstants.SERVER_PORT, rtspVideoEncoder);
 				new Thread(streamer).start();
 			}
 

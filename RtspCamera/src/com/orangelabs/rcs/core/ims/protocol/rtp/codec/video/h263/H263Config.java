@@ -38,21 +38,24 @@ public class H263Config {
      * Default codec params
      */
     public final static String CODEC_PARAMS = "profile=0;level=10";
+//    public final static String CODEC_PARAMS = "profile=0;level=20";
 
     /**
      * Default video width
      */
-    public final static int VIDEO_WIDTH = 176;
+//    public final static int VIDEO_WIDTH = 176;
+    public final static int VIDEO_WIDTH = 352;
 
     /**
      * Default video height
      */
-    public final static int VIDEO_HEIGHT = 144;
+//    public final static int VIDEO_HEIGHT = 144;
+    public final static int VIDEO_HEIGHT = 288;
 
     /**
      * Default video frame rate
      */
-    public final static int FRAME_RATE = 15;
+    public final static int FRAME_RATE = 12;
 
     /**
      * Default video bit rate

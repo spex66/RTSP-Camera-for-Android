@@ -1,5 +1,12 @@
 package de.kp.net.rtsp;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
+import android.util.Log;
+
 public class RtspConstants {
 
 	// rtsp states
@@ -40,12 +47,21 @@ public class RtspConstants {
 		H264_ENCODER
 	};
 	
-//	public static String WIDTH  = "352";
-//	public static String HEIGHT = "288";
-	public static String WIDTH  = "176";
-	public static String HEIGHT = "144";
-	public static final int FPS = 20;
-	public static final int BITRATE = 50;
+	// TODO: synchronize settings
+	// com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config
+	// com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config
+	
+	// QCIF
+//	public static String WIDTH  = "176";
+//	public static String HEIGHT = "144";
+	
+	// QCIF
+	public static String WIDTH  = "352";
+	public static String HEIGHT = "288";
+	
+	public static final int FPS = 15;
+	public static final int BITRATE = 128000; // h263-2000 
+	//public static final int BITRATE  = 64000; // for h264
 	
     public static final String SEP  = " ";
 
@@ -55,8 +71,10 @@ public class RtspConstants {
     public static final int CLIENT_AUDIO_PORT = 2000;
     public static final int CLIENT_VIDEO_PORT = 4000;
 
-	public static String SERVER_IP = "spexhd2:8080";
-	
+//	public static String SERVER_IP = "spexhd2:8080";
+    public static int SERVER_PORT = 8080;
+    public static String SERVER_IP = getLocalIpAddress() + ":" + SERVER_PORT;
+    		
 	public static String SERVER_NAME    = "KuP RTSP Server";
     public static String SERVER_VERSION = "0.1";
     
@@ -67,5 +85,24 @@ public class RtspConstants {
 	
 	// tags for logging
 	public static String SERVER_TAG = "RtspServer";
+
+	
+    public static String getLocalIpAddress() {
+    	// http://www.droidnova.com/get-the-ip-address-of-your-device,304.html
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        return inetAddress.getHostAddress().toString();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            Log.e("RtspConstants", ex.toString());
+        }
+        return null;
+    }
 
 }

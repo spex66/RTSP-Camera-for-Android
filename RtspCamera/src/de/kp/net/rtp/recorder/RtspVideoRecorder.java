@@ -225,6 +225,10 @@ public class RtspVideoRecorder extends IMediaPlayer.Stub implements Camera.Previ
             
                 params.setEncFrameRate(selectedVideoCodec.getFramerate());
                 params.setBitRate(selectedVideoCodec.getBitrate());
+
+                // set width/height parameters for native encoding, too
+                params.setEncHeight(selectedVideoCodec.getHeight());
+                params.setEncWidth(selectedVideoCodec.getWidth());
                 
                 params.setTickPerSrc(params.getTimeIncRes() / selectedVideoCodec.getFramerate());
                 params.setIntraPeriod(-1);
@@ -498,7 +502,17 @@ public class RtspVideoRecorder extends IMediaPlayer.Stub implements Camera.Previ
                     encodeResult = 0;
                 }
 
-                if (encodeResult == 0 && encodedFrame.length > 0) {
+        		System.out.println("RtpVideoRecorder: captureThread: encodeResult == " + encodeResult);
+
+        		/*
+        		 * accept additional status 
+        		 * EAVCEI_MORE_NAL     --  there is more NAL to be retrieved
+        		 */
+                if ((encodeResult == 0 || encodeResult == 6) && encodedFrame.length > 0) {
+                	
+                	if (encodeResult == 6)
+                		System.out.println("RtpVideoRecorder: captureThread: Status == EAVCEI_MORE_NAL");
+                	
                     // Send encoded frame                	
                     rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
                 }

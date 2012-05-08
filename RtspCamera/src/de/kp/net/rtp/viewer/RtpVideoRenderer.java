@@ -555,26 +555,28 @@ public class RtpVideoRenderer extends IMediaRenderer.Stub {
          *
          * @param sample Sample
          */
-        public void writeSample(MediaSample sample) {
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
-                    rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
-                            selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
-                    if (surface != null) {
-                        surface.setImage(rgbFrame);
-                    }
-                }
-            } else { // default H263
-                if (NativeH263Decoder.DecodeAndConvert(sample.getData(), decodedFrame,
-                        sample.getTimeStamp()) == 1) {
-                    rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
-                            selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
-                    if (surface != null) {
-                        surface.setImage(rgbFrame);
-                    }
-                }
-            }
-        }
+		public void writeSample(MediaSample sample) {
+			if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
+				if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
+					rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
+							selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
+
+					if (surface != null) {
+						surface.setImage(rgbFrame);
+					}
+				} else {
+					System.out.println("MediaRtpOutput.writeSample: cannot decode sample >len:" + sample.getLength());
+				}
+			} else { // default H263
+				if (NativeH263Decoder.DecodeAndConvert(sample.getData(), decodedFrame, sample.getTimeStamp()) == 1) {
+					rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
+							selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
+					if (surface != null) {
+						surface.setImage(rgbFrame);
+					}
+				}
+			}
+		}
     }
 
 	@Override
